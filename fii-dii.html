@@ -156,6 +156,16 @@
     align-items: center;
     justify-content: center;
     gap: 8px;
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 2px 8px;
+    transition: background 0.2s;
+  }
+  .flow-label:hover { background: rgba(255,255,255,0.05); }
+  .flow-label:focus {
+    outline: none;
+    background: rgba(255,255,255,0.08);
+    box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
   }
   .flow-label::before, .flow-label::after {
     content: '';
@@ -543,13 +553,13 @@
 
   <!-- FII SOLD -->
   <div class="flow-block">
-    <div class="flow-label fii-label">FII SOLD</div>
+    <div class="flow-label fii-label" contenteditable="true" spellcheck="false">FII SOLD</div>
     <div class="flow-value fii-value" contenteditable="true" spellcheck="false">₹5966 Cr</div>
   </div>
 
   <!-- DII BOUGHT -->
   <div class="flow-block" style="padding-top:4px;">
-    <div class="flow-label dii-label">DII BOUGHT</div>
+    <div class="flow-label dii-label" contenteditable="true" spellcheck="false">DII BOUGHT</div>
     <div class="flow-value dii-value" contenteditable="true" spellcheck="false">₹6685 Cr</div>
   </div>
 
