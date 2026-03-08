@@ -1,0 +1,68 @@
+{
+  "mainTitle": "SECTOR PERFORMANCE",
+  "indexName": "Nifty 50",
+  "date": "06 Mar 2026",
+  "subtitle": "NIFTY 50 \u2014 Sector Analysis | 06 Mar 2026",
+  "gainTitle": "TOP GAINER SECTORS",
+  "gainArrow": "\u25b2",
+  "lossTitle": "TOP LOSER SECTORS",
+  "lossArrow": "\u25bc",
+  "gainers": [
+    {
+      "name": "CPSE",
+      "sub": "CPSEETF.NS",
+      "pct": "+0.35%",
+      "pts": "+0 pts"
+    },
+    {
+      "name": "ENERGY",
+      "sub": "^CNXENERGY",
+      "pct": "+0.13%",
+      "pts": "+46 pts"
+    },
+    {
+      "name": "PSE",
+      "sub": "^CNXPSE",
+      "pct": "+0.12%",
+      "pts": "+12 pts"
+    },
+    {
+      "name": "IT",
+      "sub": "^CNXIT",
+      "pct": "+0.04%",
+      "pts": "+12 pts"
+    }
+  ],
+  "losers": [
+    {
+      "name": "PVT BANK",
+      "sub": "PVTBANIETF.NS",
+      "pct": "-2.23%",
+      "pts": "-1 pts"
+    },
+    {
+      "name": "REALITY",
+      "sub": "^CNXREALTY",
+      "pct": "-2.08%",
+      "pts": "-16 pts"
+    },
+    {
+      "name": "PSU BANK",
+      "sub": "^CNXPSUBANK",
+      "pct": "-2.01%",
+      "pts": "-188 pts"
+    },
+    {
+      "name": "SERVICE",
+      "sub": "^CNXSERVICE",
+      "pct": "-1.81%",
+      "pts": "-576 pts"
+    },
+    {
+      "name": "AUTO",
+      "sub": "^CNXAUTO",
+      "pct": "-1.06%",
+      "pts": "-290 pts"
+    }
+  ]
+}

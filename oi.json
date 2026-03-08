@@ -1,0 +1,80 @@
+{
+  "title": "OPEN INTEREST ANALYSIS",
+  "subtitle1": "Nifty 50 Option Chain \u2014 Call vs Put OI",
+  "subtitle2": "10-Mar-2026 Expiry",
+  "chartTitle": "Strike-wise OI Distribution",
+  "legendPut": "PUT OI (Support)",
+  "legendCall": "CALL OI (Resistance)",
+  "putColor": "#00e5ff",
+  "callColor": "#ff3d57",
+  "rows": [
+    {
+      "label": "24,000",
+      "put": 6555250,
+      "call": 589745,
+      "maxPain": false
+    },
+    {
+      "label": "24,500",
+      "put": 4741620,
+      "call": 3779100,
+      "maxPain": false
+    },
+    {
+      "label": "24,600",
+      "put": 2970045,
+      "call": 5562960,
+      "maxPain": true
+    },
+    {
+      "label": "24,700",
+      "put": 1487460,
+      "call": 5535140,
+      "maxPain": false
+    },
+    {
+      "label": "24,800",
+      "put": 1325350,
+      "call": 5340595,
+      "maxPain": false
+    },
+    {
+      "label": "24,900",
+      "put": 673010,
+      "call": 4033640,
+      "maxPain": false
+    },
+    {
+      "label": "25,000",
+      "put": 1611675,
+      "call": 10485800,
+      "maxPain": false
+    }
+  ],
+  "cards": [
+    {
+      "label": "MAX CALL OI STRIKE",
+      "value": "25,000 CE",
+      "sub": "Strong Resistance Zone",
+      "accent": "red-accent"
+    },
+    {
+      "label": "MAX PUT OI STRIKE",
+      "value": "24,000 PE",
+      "sub": "Strong Support Zone",
+      "accent": "cyan-accent"
+    },
+    {
+      "label": "MAX PAIN LEVEL",
+      "value": "24,600",
+      "sub": "Price gravity on expiry",
+      "accent": "yellow-accent"
+    },
+    {
+      "label": "EXPECTED RANGE",
+      "value": "24,000 \u2013 25,000",
+      "sub": "Expiry trading band",
+      "accent": "green-accent"
+    }
+  ]
+}

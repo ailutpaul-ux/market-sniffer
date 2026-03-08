@@ -1,0 +1,1016 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Support &amp; Resistance — Market Sniffer</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600;700&family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0f1c; --card:#0f1828; --card2:#111f30;
+  --cyan:#00e5ff; --yellow:#ffd600; --green:#00e676;
+  --red:#ff3d57; --orange:#ff9100; --text:#e8eaf6; --dim:#546e7a; --border:#1a2d40;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#04080f;font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;margin:0;padding:0;}
+
+/* ── BUTTON OUTSIDE SLIDE ── */
+.tbtn{padding:9px 20px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;letter-spacing:1px;transition:all .2s;position:relative;z-index:100;margin-top:18px;}
+.tbtn-edit{background:var(--cyan);color:#000;}.tbtn-edit:hover{background:#00b8d4;}.tbtn-edit.on{background:var(--green);}
+.tbtn-json{background:#ffa726;color:#000;margin-left:10px;}.tbtn-json:hover{background:#ff9800;}
+
+/* ── ERROR BANNER ── */
+.err-banner{display:none;max-width:1050px;margin:0 auto 10px;padding:9px 14px;background:#2a060e;border:1px solid var(--red);border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--red);}
+
+/* ── SLIDE CONTAINER WITH SPIRAL BINDING ── */
+.slide-container {
+  position: relative;
+  width: 1050px;
+  margin: 0 auto;
+  padding-top: 0;
+}
+
+/* Spiral Binding Loops */
+.spiral-binding {
+  position: absolute;
+  top: -15px;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.spiral-loop {
+  width: 20px;
+  height: 30px;
+  border: 3px solid;
+  border-color: transparent;
+  border-left-color: #00b8d4;
+  border-right-color: #00e5ff;
+  border-radius: 50%;
+  position: relative;
+  background: linear-gradient(90deg, 
+    rgba(0,184,212,0.3) 0%, 
+    rgba(0,229,255,0.15) 50%, 
+    rgba(0,184,212,0.3) 100%);
+  box-shadow: 
+    inset -2px 0 4px rgba(0,229,255,0.6),
+    inset 2px 0 4px rgba(0,184,212,0.4),
+    0 2px 8px rgba(0,229,255,0.3),
+    0 0 15px rgba(0,229,255,0.2);
+  animation: spiralShine 3s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.spiral-loop:nth-child(even) {
+  animation-delay: 0.15s;
+}
+
+.spiral-loop::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 24px;
+  border: 2px solid rgba(0,229,255,0.4);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 30% 40%, 
+    rgba(255,255,255,0.15) 0%, 
+    transparent 50%);
+}
+
+.spiral-loop::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 4px;
+  height: 8px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+@keyframes spiralShine {
+  0%, 100% {
+    box-shadow: 
+      inset -2px 0 4px rgba(0,229,255,0.6),
+      inset 2px 0 4px rgba(0,184,212,0.4),
+      0 2px 8px rgba(0,229,255,0.3),
+      0 0 15px rgba(0,229,255,0.2);
+  }
+  50% {
+    box-shadow: 
+      inset -2px 0 6px rgba(0,229,255,0.8),
+      inset 2px 0 6px rgba(0,184,212,0.6),
+      0 2px 12px rgba(0,229,255,0.5),
+      0 0 20px rgba(0,229,255,0.35);
+  }
+}
+
+/* ── SLIDE ── */
+.slide{width:1050px;margin:20px auto 0;background:#0e1628;border-top:5px solid var(--cyan);border-bottom:5px solid var(--cyan);position:relative;overflow:hidden;height:700px;padding-bottom:35px;
+box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(0,229,255,0.15);}
+.slide::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:70%;background:linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);border-radius:0 2px 2px 0;z-index:2;}
+.slide::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:4px;height:70%;background:linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);border-radius:2px 0 0 2px;z-index:2;}
+.slide.edit [data-ef]{outline:1.5px dashed rgba(0,229,255,0.35);cursor:text;border-radius:2px;}
+.slide.edit [data-ef]:hover{outline-color:var(--cyan);}
+.slide.edit [data-ef]:focus{outline:2px solid var(--cyan);background:rgba(0,229,255,0.04);}
+
+/* ── HEADER ── */
+.s-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  padding:14px 22px 8px;
+  background: linear-gradient(135deg, #0b1019 0%, #0d1520 40%, #0f1a28 100%);
+  border-bottom: 3px solid #00e5ff;
+  box-shadow: 0 4px 15px rgba(0,229,255,0.2);
+  position:relative;
+}
+.s-head::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 70%;
+  background: linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);
+  border-radius: 0 2px 2px 0;
+}
+.s-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:62px;
+  letter-spacing:3px;
+  line-height:1;
+  color:#fff;
+  text-shadow: 0 0 20px rgba(0,229,255,0.3), 0 2px 4px rgba(0,0,0,0.5);
+  background: linear-gradient(180deg, #ffffff 0%, #c8d6e5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.subtitle-row {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--cyan);
+  letter-spacing: 0.3px;
+}
+.subtitle-row span { color: var(--cyan); }
+
+.brand{
+  text-align:right;
+  flex-shrink:0;
+  padding: 10px 14px;
+  background: rgba(0,229,255,0.04);
+  border: 1px solid rgba(0,229,255,0.15);
+  border-radius: 3px;
+  box-shadow: 0 0 15px rgba(0,229,255,0.1);
+}
+.brand-the{
+  font-family: 'Courier New', Courier, monospace;
+  color: #00e5ff;
+  font-size:11px;
+  letter-spacing:4px;
+  font-weight:700;
+  text-shadow: 0 0 10px rgba(0,229,255,0.6);
+}
+.brand-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:26px;
+  letter-spacing:1.5px;
+  line-height:1.05;
+  white-space:nowrap;
+}
+.brand-name .red, .brand-name .mkt, #brandMkt { 
+  color: #ff6b6b;
+  text-shadow: 0 0 8px rgba(255,107,107,0.4);
+}
+.brand-name .white, .brand-name .snf, #brandSnf { 
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255,255,255,0.3);
+}
+
+
+
+/* ── BODY: chart area left + panel right ── */
+.s-body {
+  display: grid;
+  grid-template-columns: 1fr 340px;
+  min-height: 480px;
+  padding-bottom: 30px;
+}
+
+/* ── CHART AREA ── */
+.chart-area {
+  background: #0e1628;
+  border-right: 1px solid rgba(26,45,64,0.5);
+  position: relative;
+  min-height: 480px;
+}
+
+/* chart placeholder and upload */
+.chart-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(0,229,255,0.25);
+  letter-spacing: 2px;
+}
+
+.chart-img {
+  width: 100%;
+  height: 100%;
+  object-fit: fill;
+  display: none;
+}
+
+.change-chart-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(0,229,255,0.15);
+  border: 1.5px solid rgba(0,229,255,0.4);
+  color: var(--cyan);
+  font-size: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .2s;
+  backdrop-filter: blur(5px);
+  display: none;
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+}
+.change-chart-btn:hover {
+  background: rgba(0,229,255,0.3);
+  border-color: rgba(0,229,255,0.7);
+  box-shadow: 0 0 15px rgba(0,229,255,0.4);
+  transform: scale(1.05);
+}
+
+.remove-chart-btn {
+  position: absolute;
+  bottom: 16px;
+  right: 64px;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: rgba(255,61,87,0.15);
+  border: 1.5px solid rgba(255,61,87,0.4);
+  color: var(--red);
+  font-size: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .2s;
+  backdrop-filter: blur(5px);
+  display: none;
+  z-index: 10;
+  align-items: center;
+  justify-content: center;
+}
+.remove-chart-btn:hover {
+  background: rgba(255,61,87,0.3);
+  border-color: rgba(255,61,87,0.7);
+  box-shadow: 0 0 15px rgba(255,61,87,0.4);
+  transform: scale(1.05);
+}
+
+.upload-btn {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, rgba(0,229,255,0.15) 0%, rgba(0,229,255,0.08) 100%);
+  border: 1.5px solid rgba(0,229,255,0.35);
+  color: var(--cyan);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all .2s;
+  text-transform: uppercase;
+}
+.upload-btn:hover {
+  background: linear-gradient(135deg, rgba(0,229,255,0.25) 0%, rgba(0,229,255,0.15) 100%);
+  border-color: rgba(0,229,255,0.6);
+  box-shadow: 0 0 15px rgba(0,229,255,0.3);
+}
+input[type="file"] {
+  display: none;
+}
+
+/* ── RIGHT PANEL ── */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  background: #0e1628;
+}
+
+/* Panel header */
+.panel-header {
+  background: rgba(0,229,255,0.05);
+  padding: 12px 16px;
+  text-align: center;
+  border-bottom: 2px solid rgba(0,229,255,0.25);
+}
+.panel-header-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--cyan);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(0,229,255,0.4);
+}
+
+/* ── KEY LEVEL ROWS ── */
+.levels-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.level-row {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(26,45,64,0.4);
+  gap: 10px;
+  position: relative;
+  background: #0e1628;
+  transition: background .15s;
+}
+.level-row:hover { background:rgba(255,255,255,0.015); }
+
+/* left accent bar */
+.level-accent {
+  width: 4px;
+  height: 28px;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.level-name {
+  font-family: 'Barlow', sans-serif;
+  font-size: 14px;
+  color: #c8d8e8;
+  flex: 1;
+  letter-spacing: 0.2px;
+}
+
+.level-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* CMP row — special highlight */
+.level-row.cmp-row {
+  background: rgba(0,229,255,0.06);
+  border-top: 1px solid rgba(0,229,255,0.25);
+  border-bottom: 1px solid rgba(0,229,255,0.25);
+}
+.level-row.cmp-row .level-name {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 15px;
+}
+.level-row.cmp-row .level-value {
+  color: #ffffff;
+  font-size: 16px;
+}
+.cmp-arrow {
+  font-size: 12px;
+  color: var(--cyan);
+  margin-right: 4px;
+}
+
+/* ── VERDICT BOX ── */
+.verdict-box {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.verdict-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+  line-height: 1.5;
+}
+.verdict-line.first { font-size: 14px; }
+
+/* ── DISCLAIMER ── */
+.disclaimer {
+  position: absolute;
+  bottom: 8px;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 13px;
+  color: #FFA726;
+  font-family: 'Exo 2', sans-serif;
+  letter-spacing: 0.3px;
+  z-index: 10;
+}
+
+  /* ── HEADER BANNER ── */
+  .header-banner {
+    width: 100%;
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
+    border-bottom: 3px solid #00e5ff;
+    box-shadow: 0 4px 20px rgba(0,229,255,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+  }
+  .header-content {
+    max-width: 1050px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    padding: 0 15px;
+    position: relative;
+  }
+  .header-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(180deg, transparent, #00e5ff, transparent);
+    border-radius: 2px;
+  }
+  .header-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hb-top {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #00e5ff;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0,229,255,0.5);
+    text-align: right;
+  }
+  .hb-name {
+    font-family: 'Bebas Neue', Arial, sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .hb-market { 
+    color: #ff6b6b;
+    text-shadow: 0 0 8px rgba(255,107,107,0.4);
+  }
+  .hb-sniffer { 
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.3);
+  }
+
+  /* ── SITE NAV ── */
+  .site-nav-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; flex-wrap: wrap; row-gap: 6px;
+  }
+  .snb-links { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .snb-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 11px; border-radius: 5px; text-decoration: none;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    color: #ffffff; 
+    background: linear-gradient(135deg, rgba(15,25,35,0.8) 0%, rgba(20,30,40,0.5) 100%);
+    border: 1px solid rgba(0,229,255,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3);
+    transition: all .25s ease; white-space: nowrap;
+    position: relative;
+    transform: perspective(100px) translateZ(0);
+  }
+  .snb-link:hover { 
+    color: #b8d4e0; 
+    background: linear-gradient(135deg, rgba(0,229,255,0.12) 0%, rgba(0,229,255,0.06) 100%);
+    border-color: rgba(0,229,255,0.4);
+    box-shadow: 0 4px 8px rgba(0,229,255,0.15), 0 0 16px rgba(0,229,255,0.2), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.2);
+    transform: perspective(100px) translateZ(4px);
+  }
+  .snb-link.snb-active { 
+    color: #00e5ff; 
+    background: linear-gradient(135deg, rgba(0,229,255,0.2) 0%, rgba(0,229,255,0.12) 100%);
+    border-color: rgba(0,229,255,0.6);
+    box-shadow: 0 6px 12px rgba(0,229,255,0.25), 0 0 24px rgba(0,229,255,0.35), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.15);
+    text-shadow: 0 0 10px rgba(0,229,255,0.5), 0 1px 2px rgba(0,0,0,0.5);
+    transform: perspective(100px) translateZ(6px);
+  }
+  .snb-link .snb-num { font-size: 9px; opacity: .6; font-weight: 400; }
+  .snb-sep { width: 1px; height: 20px; background: #0d1f30; margin: 0 6px; flex-shrink: 0; }
+  .snb-arrows { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
+  .snb-arrow {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 4px;
+    border: 1.5px solid #00c8c8; background: rgba(0,200,200,0.08);
+    color: #00e5e5; text-decoration: none; font-size: 16px;
+    transition: background .2s, box-shadow .2s;
+  }
+  .snb-arrow:hover { background: rgba(0,200,200,0.22); box-shadow: 0 0 20px rgba(0,200,200,0.25); }
+  .snb-arrow.snb-disabled { opacity: 0.25; pointer-events: none; }
+  .snb-count { font-family: 'Share Tech Mono','JetBrains Mono',monospace; font-size: 13px; color: #445566; letter-spacing: 2px; min-width: 60px; text-align: center; }
+  .snb-count span { color: #00c8c8; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER BANNER ══ -->
+<div class="header-banner">
+  <div class="header-content">
+    <div class="header-brand">
+      <div class="hb-top">T H E</div>
+      <div class="hb-name">
+        <span class="hb-market">MARKET&nbsp;</span><span class="hb-sniffer">SNIFFER</span>
+      </div>
+    </div>
+    <div class="site-nav-bar">
+      <a class="snb-arrow" href="4.html">&#8592;</a>
+      <div class="snb-links">
+        <a class="snb-link" href="1.html"><span class="snb-num">1.</span>NIFTY 50</a>
+        <a class="snb-link" href="2.html"><span class="snb-num">2.</span>SECTORS</a>
+        <a class="snb-link" href="5.html"><span class="snb-num">3.</span>FII/DII</a>
+        <a class="snb-link" href="3.html"><span class="snb-num">4.</span>OI</a>
+        <a class="snb-link" href="4.html"><span class="snb-num">5.</span>PCR</a>
+        <a class="snb-link snb-active" href="8.html"><span class="snb-num">6.</span>S&R</a>
+        <a class="snb-link" href="6.html"><span class="snb-num">7.</span>LB/SB</a>
+        <a class="snb-link" href="7.html"><span class="snb-num">8.</span>COMBINED</a>
+      </div>
+      <a class="snb-arrow" href="6.html">&#8594;</a>
+    </div>
+  </div>
+</div>
+
+<div class="err-banner" id="errorBanner"></div>
+
+<!-- ══ SLIDE WITH SPIRAL BINDING ══ -->
+<div class="slide-container">
+  <div class="spiral-binding">
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+  </div>
+  <div class="slide" id="slide">
+
+  <!-- HEADER -->
+  <div class="s-head">
+    <div class="header-left">
+      <div class="s-title" id="mainTitle">SUPPORT &amp; RESISTANCE</div>
+      <div class="subtitle-row" id="subtitle">Nifty 50 Daily Candlestick Chart &nbsp;|&nbsp; Jan – Feb 2026</div>
+    </div>
+    <div class="brand">
+      <div class="brand-the" id="brandThe">T H E</div>
+      <div class="brand-name">
+        <span class="red" id="brandMkt">MARKET&nbsp;</span><span class="white" id="brandSnf">SNIFFER</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="s-body">
+
+    <!-- LEFT: chart area -->
+    <div class="chart-area" id="chartArea">
+      <img class="chart-img" id="chartImg" src="" alt="Chart">
+      <div class="chart-placeholder" id="chartPlaceholder">
+        <div>📊 CHART AREA</div>
+        <div style="font-size: 10px; opacity: 0.6; margin-top: -8px;">Upload or Paste (Ctrl+V) Image</div>
+        <input type="file" id="chartUpload" accept="image/*">
+        <button class="upload-btn" onclick="document.getElementById('chartUpload').click()">📁 Upload Chart</button>
+      </div>
+      <button class="remove-chart-btn" id="removeChartBtn" onclick="removeChart()">🗑️</button>
+      <button class="change-chart-btn" id="changeChartBtn" onclick="document.getElementById('chartUpload').click()">🔄</button>
+    </div>
+
+    <!-- RIGHT: key levels panel -->
+    <div class="right-panel">
+
+      <div class="panel-header">
+        <div class="panel-header-text" id="panelTitle">NIFTY KEY LEVELS</div>
+      </div>
+
+      <div class="levels-list" id="levelsList"></div>
+
+      <!-- VERDICT -->
+      <div class="verdict-box" id="verdictBox"></div>
+
+    </div><!-- /right-panel -->
+
+  </div><!-- /s-body -->
+
+  <div class="disclaimer">For educational purposes only. Not SEBI registered advice. Consult a certified financial advisor before trading.</div>
+
+</div><!-- /slide -->
+
+</div><!-- /slide-container -->
+
+<!-- EDIT BUTTONS -->
+<div style="display:flex;gap:10px;margin-bottom:20px;align-items:center;">
+  <button class="tbtn tbtn-edit" onclick="toggleEdit()">✏ EDIT MODE</button>
+  <button class="tbtn tbtn-json" onclick="updateFromJSON()">🔄 UPDATE FROM JSON</button>
+</div>
+
+<script>
+const STORAGE_KEY = 'page8_edited_data';
+let currentData = {};
+let editMode = false;
+
+/* ══════════════════════════════
+   EDIT MODE
+══════════════════════════════ */
+function toggleEdit() {
+  const slide = document.getElementById('slide');
+  const btn = event.target;
+  editMode = !editMode;
+  
+  if (editMode) {
+    slide.classList.add('edit');
+    btn.classList.add('on');
+    btn.textContent = '✅ SAVE & EXIT';
+    // Make elements editable
+    document.querySelectorAll('[data-ef]').forEach(el => {
+      el.contentEditable = 'true';
+    });
+  } else {
+    slide.classList.remove('edit');
+    btn.classList.remove('on');
+    btn.textContent = '✏ EDIT MODE';
+    // Disable editing
+    document.querySelectorAll('[data-ef]').forEach(el => {
+      el.contentEditable = 'false';
+    });
+    // Save changes
+    saveToLocalStorage();
+  }
+}
+
+function saveToLocalStorage() {
+  // Collect data from DOM
+  currentData.mainTitle = document.getElementById('mainTitle').textContent.trim();
+  currentData.subtitle = document.getElementById('subtitle').innerHTML.trim();
+  currentData.brandThe = document.getElementById('brandThe').textContent.trim();
+  currentData.brandMkt = document.getElementById('brandMkt').textContent.trim();
+  currentData.brandSnf = document.getElementById('brandSnf').textContent.trim();
+  currentData.panelTitle = document.getElementById('panelTitle').textContent.trim();
+  
+  // Collect levels
+  const levels = [];
+  document.querySelectorAll('.level-row').forEach(row => {
+    const nameEl = row.querySelector('.level-name');
+    const valueEl = row.querySelector('.level-value');
+    if (nameEl && valueEl) {
+      // Extract text without the CMP arrow
+      let label = nameEl.textContent.trim();
+      if (label.startsWith('▶')) {
+        label = label.substring(1).trim();
+      }
+      levels.push({
+        label: label,
+        value: valueEl.textContent.trim(),
+        accentColor: row.querySelector('.level-accent')?.style.background || '#00c8d4',
+        valueColor: valueEl.style.color || '#00c8d4',
+        type: row.classList.contains('cmp-row') ? 'cmp' : 'level'
+      });
+    }
+  });
+  currentData.levels = levels;
+  
+  // Collect verdict
+  const verdictLines = [];
+  document.querySelectorAll('.verdict-line').forEach(line => {
+    verdictLines.push(line.textContent.trim());
+  });
+  currentData.verdictLines = verdictLines;
+  currentData.verdictBg = document.getElementById('verdictBox').style.background || '#cc0000';
+  
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+  console.log('✓ Saved to localStorage:', currentData);
+}
+
+async function updateFromJSON() {
+  if (editMode) {
+    alert('Please exit edit mode first.');
+    return;
+  }
+  localStorage.removeItem(STORAGE_KEY);
+  console.log('✓ Cleared localStorage, reloading from JSON...');
+  location.reload();
+}
+
+/* ══════════════════════════════
+   CHART CLICK TO SHOW BUTTONS
+══════════════════════════════ */
+let buttonsVisible = false;
+
+document.getElementById('chartImg').addEventListener('click', function(e) {
+  e.stopPropagation();
+  const changeBtn = document.getElementById('changeChartBtn');
+  const removeBtn = document.getElementById('removeChartBtn');
+  
+  if (!buttonsVisible) {
+    changeBtn.style.display = 'flex';
+    removeBtn.style.display = 'flex';
+    buttonsVisible = true;
+  } else {
+    changeBtn.style.display = 'none';
+    removeBtn.style.display = 'none';
+    buttonsVisible = false;
+  }
+});
+
+// Hide buttons when clicking outside
+document.addEventListener('click', function(e) {
+  const chartArea = document.getElementById('chartArea');
+  const changeBtn = document.getElementById('changeChartBtn');
+  const removeBtn = document.getElementById('removeChartBtn');
+  
+  if (!chartArea.contains(e.target)) {
+    changeBtn.style.display = 'none';
+    removeBtn.style.display = 'none';
+    buttonsVisible = false;
+  }
+});
+
+// Prevent button clicks from toggling
+document.getElementById('changeChartBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+});
+
+document.getElementById('removeChartBtn').addEventListener('click', function(e) {
+  e.stopPropagation();
+});
+
+/* ══════════════════════════════
+   CHART UPLOAD
+══════════════════════════════ */
+document.getElementById('chartUpload').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file && file.type.startsWith('image/')) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      displayChart(event.target.result);
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+// Remove chart function
+function removeChart() {
+  const img = document.getElementById('chartImg');
+  const placeholder = document.getElementById('chartPlaceholder');
+  const changeBtn = document.getElementById('changeChartBtn');
+  const removeBtn = document.getElementById('removeChartBtn');
+  const uploadInput = document.getElementById('chartUpload');
+  
+  img.src = '';
+  img.style.display = 'none';
+  placeholder.style.display = 'flex';
+  changeBtn.style.display = 'none';
+  removeBtn.style.display = 'none';
+  uploadInput.value = '';
+  buttonsVisible = false;
+  
+  // Clear from localStorage
+  localStorage.removeItem('page8_chart');
+}
+
+// Helper function to display chart
+function displayChart(dataUrl) {
+  const img = document.getElementById('chartImg');
+  const placeholder = document.getElementById('chartPlaceholder');
+  const changeBtn = document.getElementById('changeChartBtn');
+  const removeBtn = document.getElementById('removeChartBtn');
+  img.src = dataUrl;
+  img.style.display = 'block';
+  placeholder.style.display = 'none';
+  changeBtn.style.display = 'none';
+  removeBtn.style.display = 'none';
+  buttonsVisible = false;
+  // Save to localStorage
+  localStorage.setItem('page8_chart', dataUrl);
+}
+
+// Paste functionality - paste image from clipboard
+document.addEventListener('paste', function(e) {
+  const items = e.clipboardData.items;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      e.preventDefault();
+      const blob = items[i].getAsFile();
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        displayChart(event.target.result);
+      };
+      reader.readAsDataURL(blob);
+      break;
+    }
+  }
+});
+
+// Load saved chart on page load
+window.addEventListener('DOMContentLoaded', function() {
+  const savedChart = localStorage.getItem('page8_chart');
+  if (savedChart) {
+    displayChart(savedChart);
+  }
+});
+
+/* ══════════════════════════════
+   RENDER
+══════════════════════════════ */
+function renderLevels(levels, cmp) {
+  const list = document.getElementById('levelsList');
+  list.innerHTML = '';
+
+  levels.forEach(row => {
+    const isCmp = row.type === 'cmp';
+    const div = document.createElement('div');
+    div.className = 'level-row' + (isCmp ? ' cmp-row' : '');
+
+    const accent = document.createElement('div');
+    accent.className = 'level-accent';
+    accent.style.background = row.accentColor || (isCmp ? '#ffffff' : '#00d4d4');
+
+    const name = document.createElement('div');
+    name.className = 'level-name';
+    name.setAttribute('data-ef', 'level-name');
+    if (isCmp) {
+      name.innerHTML = `<span class="cmp-arrow">▶</span> ${row.label}`;
+    } else {
+      name.textContent = row.label;
+    }
+
+    const val = document.createElement('div');
+    val.className = 'level-value';
+    val.setAttribute('data-ef', 'level-value');
+    val.style.color = row.valueColor || (isCmp ? '#ffffff' : '#e53e3e');
+    val.textContent = row.value;
+
+    div.appendChild(accent);
+    div.appendChild(name);
+    div.appendChild(val);
+    list.appendChild(div);
+  });
+}
+
+function renderVerdict(lines, bg) {
+  const box = document.getElementById('verdictBox');
+  box.style.background = bg || '#cc0000';
+  box.innerHTML = lines.map((l, i) =>
+    `<div class="verdict-line${i === 0 ? ' first' : ''}" data-ef="verdict-line">${l}</div>`
+  ).join('');
+}
+
+/* ══════════════════════════════
+   JSON LOAD
+══════════════════════════════ */
+async function loadData() {
+  // Check localStorage first
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try {
+      const d = JSON.parse(stored);
+      currentData = d;
+      console.log('✓ Loaded from localStorage:', d);
+      
+      // Apply stored data
+      if (d.mainTitle) document.getElementById('mainTitle').textContent = d.mainTitle;
+      if (d.subtitle) document.getElementById('subtitle').innerHTML = d.subtitle;
+      if (d.brandThe) document.getElementById('brandThe').textContent = d.brandThe;
+      if (d.brandMkt) document.getElementById('brandMkt').textContent = d.brandMkt;
+      if (d.brandSnf) document.getElementById('brandSnf').textContent = d.brandSnf;
+      if (d.panelTitle) document.getElementById('panelTitle').textContent = d.panelTitle;
+      
+      // Levels & verdict
+      if (Array.isArray(d.levels)) renderLevels(d.levels);
+      if (Array.isArray(d.verdictLines)) renderVerdict(d.verdictLines, d.verdictBg);
+      
+      // Make header elements editable
+      document.getElementById('mainTitle').setAttribute('data-ef', 'title');
+      document.getElementById('subtitle').setAttribute('data-ef', 'subtitle');
+      document.getElementById('brandThe').setAttribute('data-ef', 'brand');
+      document.getElementById('brandMkt').setAttribute('data-ef', 'brand');
+      document.getElementById('brandSnf').setAttribute('data-ef', 'brand');
+      document.getElementById('panelTitle').setAttribute('data-ef', 'panel-title');
+      
+      return;
+    } catch (err) {
+      console.error('Error loading from localStorage:', err);
+    }
+  }
+  
+  // Load from JSON if no localStorage
+  try {
+    const res = await fetch('sr.json');
+    if (!res.ok) throw new Error(`sr.json not found (HTTP ${res.status})`);
+    const d = await res.json();
+    currentData = d;
+
+    // Header
+    if (d.mainTitle) document.getElementById('mainTitle').textContent = d.mainTitle;
+    if (d.subtitle)  document.getElementById('subtitle').innerHTML   = d.subtitle;
+    if (d.brandThe)  document.getElementById('brandThe').textContent  = d.brandThe;
+    if (d.brandMkt)  document.getElementById('brandMkt').textContent  = d.brandMkt;
+    if (d.brandSnf)  document.getElementById('brandSnf').textContent  = d.brandSnf;
+    if (d.panelTitle)document.getElementById('panelTitle').textContent= d.panelTitle;
+
+    // Chart image
+    if (d.chartImage) {
+      const img = document.getElementById('chartImg');
+      img.src = d.chartImage;
+      img.style.display = 'block';
+      document.getElementById('chartPlaceholder').style.display = 'none';
+    }
+
+    // Levels
+    if (Array.isArray(d.levels)) renderLevels(d.levels);
+
+    // Verdict
+    if (Array.isArray(d.verdictLines)) renderVerdict(d.verdictLines, d.verdictBg);
+    
+    // Make header elements editable
+    document.getElementById('mainTitle').setAttribute('data-ef', 'title');
+    document.getElementById('subtitle').setAttribute('data-ef', 'subtitle');
+    document.getElementById('brandThe').setAttribute('data-ef', 'brand');
+    document.getElementById('brandMkt').setAttribute('data-ef', 'brand');
+    document.getElementById('brandSnf').setAttribute('data-ef', 'brand');
+    document.getElementById('panelTitle').setAttribute('data-ef', 'panel-title');
+
+  } catch (err) {
+    const b = document.getElementById('errorBanner');
+    b.style.display = 'block';
+    b.textContent = '⚠ ' + err.message + ' — Place sr.json alongside this file and serve via local server (not file://).';
+    // Render defaults so slide isn't blank
+    renderDefaults();
+  }
+}
+
+function renderDefaults() {
+  renderLevels([
+    { label: 'Strong Resistance', value: '25,940 – 26,000', accentColor: '#e53e3e', valueColor: '#e53e3e', type: 'resistance' },
+    { label: 'Resistance 2',      value: '25,800 – 25,828', accentColor: '#e53e3e', valueColor: '#e53e3e', type: 'resistance' },
+    { label: 'Resistance 1',      value: '25,665 – 25,737', accentColor: '#e53e3e', valueColor: '#e53e3e', type: 'resistance' },
+    { label: 'CMP',               value: '25,571',           accentColor: '#ffffff', valueColor: '#ffffff', type: 'cmp'        },
+    { label: 'Support 1',         value: '25,400 – 25,470', accentColor: '#00c8d4', valueColor: '#00c8d4', type: 'support'    },
+    { label: 'Support 2',         value: '25,300 – 25,341', accentColor: '#00c8d4', valueColor: '#00c8d4', type: 'support'    },
+    { label: 'Support 3',         value: '25,200 – 25,250', accentColor: '#00c8d4', valueColor: '#00c8d4', type: 'support'    },
+  ]);
+  renderVerdict([
+    '💡 Bias: Sell-on-Rise',
+    'No-Trade Zone: 25,530–25,665',
+    'Watch 25,400 as key support'
+  ], '#cc0000');
+}
+
+loadData();
+</script>
+</body>
+</html>

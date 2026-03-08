@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OI Build-Up Analysis</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600;700&family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #080c14;
+  --card: #0f1520;
+  --green: #00e676;
+  --red: #ff3d57;
+  --orange: #ff9100;
+  --cyan: #00e5ff;
+  --yellow: #ffd600;
+  --text: #e8eaf6;
+  --dim: #546e7a;
+  --border: #1a2a3a;
+
+  --lb-bg: #041a08; --lb-border: #00e676; --lb-accent: #00e676;
+  --sb-bg: #1a0408; --sb-border: #ff3d57; --sb-accent: #ff3d57;
+  --lu-bg: #1a0d00; --lu-border: #ff9100; --lu-accent: #ff9100;
+  --sc-bg: #001a1a; --sc-border: #00e5ff; --sc-accent: #00e5ff;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: #04080f;
+  font-family: 'Barlow', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── EDIT BUTTONS ── */
+.tbtn {
+  background: #00e5ff;
+  color: #000;
+  border: none;
+  padding: 9px 20px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+  letter-spacing: 1px;
+  margin-top: 18px;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 100;
+}
+.tbtn-edit { background: #00e5ff; color: #000; }
+.tbtn-edit:hover { background: #00b8d4; }
+.tbtn-edit.on { background: #00e676; }
+.tbtn-json { background: #ffa726; color: #000; margin-left: 10px; }
+.tbtn-json:hover { background: #ff9800; }
+.tbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── INLINE EDIT MODE ── */
+.slide.edit [data-ef] {
+  outline: 1.5px dashed rgba(0,229,255,0.35);
+  cursor: text;
+  border-radius: 2px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+.slide.edit [data-ef]:hover {
+  outline-color: rgba(0,229,255,0.7);
+}
+.slide.edit [data-ef]:focus {
+  outline: 2px solid rgba(0,229,255,1);
+  background: rgba(0,229,255,0.08);
+}
+
+[contenteditable] { outline: none; }
+
+/* ── SLIDE CONTAINER WITH SPIRAL BINDING ── */
+.slide-container {
+  position: relative;
+  width: 1050px;
+  margin: 0 auto;
+  padding-top: 0;
+}
+
+/* Spiral Binding Loops */
+.spiral-binding {
+  position: absolute;
+  top: -15px;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.spiral-loop {
+  width: 20px;
+  height: 30px;
+  border: 3px solid;
+  border-color: transparent;
+  border-left-color: #00b8d4;
+  border-right-color: #00e5ff;
+  border-radius: 50%;
+  position: relative;
+  background: linear-gradient(90deg, 
+    rgba(0,184,212,0.3) 0%, 
+    rgba(0,229,255,0.15) 50%, 
+    rgba(0,184,212,0.3) 100%);
+  box-shadow: 
+    inset -2px 0 4px rgba(0,229,255,0.6),
+    inset 2px 0 4px rgba(0,184,212,0.4),
+    0 2px 8px rgba(0,229,255,0.3),
+    0 0 15px rgba(0,229,255,0.2);
+  animation: spiralShine 3s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.spiral-loop:nth-child(even) {
+  animation-delay: 0.15s;
+}
+
+.spiral-loop::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 24px;
+  border: 2px solid rgba(0,229,255,0.4);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 30% 40%, 
+    rgba(255,255,255,0.15) 0%, 
+    transparent 50%);
+}
+
+.spiral-loop::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 4px;
+  height: 8px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+@keyframes spiralShine {
+  0%, 100% {
+    box-shadow: 
+      inset -2px 0 4px rgba(0,229,255,0.6),
+      inset 2px 0 4px rgba(0,184,212,0.4),
+      0 2px 8px rgba(0,229,255,0.3),
+      0 0 15px rgba(0,229,255,0.2);
+  }
+  50% {
+    box-shadow: 
+      inset -2px 0 6px rgba(0,229,255,0.8),
+      inset 2px 0 6px rgba(0,184,212,0.6),
+      0 2px 12px rgba(0,229,255,0.5),
+      0 0 20px rgba(0,229,255,0.35);
+  }
+}
+
+/* ── SLIDE ── */
+.slide {
+  width: 1050px;
+  height: 700px;
+  background: #0e1628;
+  border-top: 5px solid var(--cyan);
+  border-bottom: 5px solid var(--cyan);
+  position: relative;
+  overflow: hidden;
+  margin: 20px 0 0;
+  padding-bottom: 35px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(0,229,255,0.15);
+}
+.slide::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 70%;
+  background: linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);
+  border-radius: 0 2px 2px 0;
+  z-index: 2;
+}
+.slide::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 70%;
+  background: linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);
+  border-radius: 2px 0 0 2px;
+  z-index: 2;
+}
+
+/* ── HEADER ── */
+.s-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 14px 20px 8px;
+  background: linear-gradient(135deg, #0b1019 0%, #0d1520 40%, #0f1a28 100%);
+  border-bottom: 3px solid #00e5ff;
+  box-shadow: 0 4px 15px rgba(0,229,255,0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+  position: relative;
+}
+.s-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 70%;
+  background: linear-gradient(180deg, transparent, #00e5ff, transparent);
+  border-radius: 2px;
+}
+.s-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 62px;
+  letter-spacing: 3px;
+  color: #fff;
+  line-height: 1;
+  text-shadow: 0 0 20px rgba(0,229,255,0.3), 0 2px 4px rgba(0,0,0,0.5);
+  background: linear-gradient(180deg, #ffffff 0%, #c8d6e5 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* brand top-right */
+.brand-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  padding: 10px 14px;
+  background: rgba(0,229,255,0.04);
+  border-radius: 4px;
+  border: 1px solid rgba(0,229,255,0.15);
+  box-shadow: 0 0 15px rgba(0,229,255,0.1);
+}
+.brand-the {
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: #00e5ff;
+  font-weight: 700;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(0,229,255,0.6);
+  margin-bottom: 2px;
+}
+.brand-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px;
+  letter-spacing: 1.5px;
+  line-height: 1.05;
+  white-space: nowrap;
+}
+.brand-name .mkt { color: #ff6b6b; text-shadow: 0 0 8px rgba(255,107,107,0.4); }
+.brand-name .snf { color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
+.brand-line {
+  width: 100%;
+  height: 2px;
+  background: var(--cyan);
+  margin-top: 4px;
+}
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.subtitle-row {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--cyan);
+  letter-spacing: 0.3px;
+}
+.subtitle-row span { color: var(--cyan); }
+
+/* ── OLD SUBTITLE (not used) ── */
+.s-subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--cyan);
+  letter-spacing: 0.3px;
+}
+
+/* ── 2-COLUMN GRID ── */
+.panels-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+  padding: 8px;
+}
+
+/* ── PANEL ── */
+.panel { display: flex; flex-direction: column; border-radius: 2px; overflow: hidden; }
+
+.panel-header {
+  padding: 8px 10px 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 2px solid transparent;
+}
+.ph-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 20px;
+  letter-spacing: 1.5px;
+}
+.ph-arrow { font-size: 15px; }
+.ph-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.45);
+  letter-spacing: 0.3px;
+}
+
+.panel.lb .panel-header { background: #061d0a; border-color: var(--lb-border); color: var(--lb-accent); }
+.panel.sb .panel-header { background: #1e060a; border-color: var(--sb-border); color: var(--sb-accent); }
+.panel.lu .panel-header { background: #1e0e00; border-color: var(--lu-border); color: var(--lu-accent); }
+.panel.sc .panel-header { background: #001e1e; border-color: var(--sc-border); color: var(--sc-accent); }
+
+/* ── STOCK CARDS ── */
+.stock-cards { display: flex; flex-direction: column; gap: 4px; padding: 4px; background: #0a0f18; }
+
+.stock-card {
+  padding: 7px 8px 6px;
+  border-radius: 2px;
+  position: relative;
+}
+.panel.lb .stock-card { background: var(--lb-bg); }
+.panel.sb .stock-card { background: var(--sb-bg); }
+.panel.lu .stock-card { background: var(--lu-bg); }
+.panel.sc .stock-card { background: var(--sc-bg); }
+
+.sc-top {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+.sc-rank {
+  width: 20px; height: 20px;
+  border-radius: 2px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 700;
+  flex-shrink: 0;
+}
+.panel.lb .sc-rank { background: var(--green); color: #000; }
+.panel.sb .sc-rank { background: var(--red); color: #fff; }
+.panel.lu .sc-rank { background: var(--orange); color: #000; }
+.panel.sc .sc-rank { background: var(--cyan); color: #000; }
+
+.sc-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px; font-weight: 800;
+  color: var(--text); flex: 1;
+  letter-spacing: 0.3px;
+}
+.sc-oi {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  white-space: nowrap;
+}
+
+.sc-metrics {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.metric-pill {
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 700;
+  white-space: nowrap;
+}
+.metric-pill-oi {
+  padding: 2px 7px;
+  border-radius: 3px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 20px; font-weight: 700;
+  white-space: nowrap;
+}
+.pill-price-pos { background: rgba(0,230,118,0.18); color: var(--green); }
+.pill-price-neg { background: rgba(255,61,87,0.18);  color: var(--red); }
+
+.sc-multiplier {
+  margin-left: auto;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 26px; letter-spacing: 1px;
+  color: var(--yellow);
+  white-space: nowrap;
+}
+
+.sc-bar { height: 3px; border-radius: 2px; margin-top: 5px; }
+.panel.lb .sc-bar { background: var(--green); }
+.panel.sb .sc-bar { background: var(--red); }
+.panel.lu .sc-bar { background: var(--orange); }
+.panel.sc .sc-bar { background: var(--cyan); }
+
+/* ── LEGEND ── */
+.legend-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  padding: 6px 10px;
+  background: #0a0f18;
+  border-top: 1px solid #12202e;
+}
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 14px 2px 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.45);
+  white-space: nowrap;
+}
+.legend-dot { width: 12px; height: 8px; border-radius: 1px; flex-shrink: 0; }
+
+/* ── FOOTER ── */
+.footer-bar {
+  padding: 6px 16px;
+  background: #06101a;
+  border-top: 1px solid #12202e;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+}
+.footer-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--cyan);
+  padding-right: 14px;
+  border-right: 1px solid #1a2a3a;
+  margin-right: 14px;
+  white-space: nowrap;
+}
+.footer-item:last-child { border-right: none; }
+
+/* ── ERROR ── */
+.error-banner {
+  display: none;
+  width: 1050px;
+  margin-bottom: 12px;
+  background: #2a060e;
+  border: 1px solid var(--red);
+  color: var(--red);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  padding: 10px 16px;
+  border-radius: 4px;
+}
+
+  /* ── HEADER BANNER ── */
+  .header-banner {
+    width: 100%;
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
+    border-bottom: 3px solid #00e5ff;
+    box-shadow: 0 4px 20px rgba(0,229,255,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+  }
+  .header-content {
+    max-width: 1050px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    padding: 0 15px;
+    position: relative;
+  }
+  .header-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(180deg, transparent, #00e5ff, transparent);
+    border-radius: 2px;
+  }
+  .header-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hb-top {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #00e5ff;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0,229,255,0.5);
+    text-align: right;
+  }
+  .hb-name {
+    font-family: 'Bebas Neue', Arial, sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .hb-market { 
+    color: #ff6b6b;
+    text-shadow: 0 0 8px rgba(255,107,107,0.4);
+  }
+  .hb-sniffer { 
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.3);
+  }
+
+  /* ── SITE NAV ── */
+  .site-nav-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; flex-wrap: wrap; row-gap: 6px;
+  }
+  .snb-links { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .snb-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 11px; border-radius: 5px; text-decoration: none;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    color: #ffffff; 
+    background: linear-gradient(135deg, rgba(15,25,35,0.8) 0%, rgba(20,30,40,0.5) 100%);
+    border: 1px solid rgba(0,229,255,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3);
+    transition: all .25s ease; white-space: nowrap;
+    position: relative;
+    transform: perspective(100px) translateZ(0);
+  }
+  .snb-link:hover { 
+    color: #b8d4e0; 
+    background: linear-gradient(135deg, rgba(0,229,255,0.12) 0%, rgba(0,229,255,0.06) 100%);
+    border-color: rgba(0,229,255,0.4);
+    box-shadow: 0 4px 8px rgba(0,229,255,0.15), 0 0 16px rgba(0,229,255,0.2), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.2);
+    transform: perspective(100px) translateZ(4px);
+  }
+  .snb-link.snb-active { 
+    color: #00e5ff; 
+    background: linear-gradient(135deg, rgba(0,229,255,0.2) 0%, rgba(0,229,255,0.12) 100%);
+    border-color: rgba(0,229,255,0.6);
+    box-shadow: 0 6px 12px rgba(0,229,255,0.25), 0 0 24px rgba(0,229,255,0.35), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.15);
+    text-shadow: 0 0 10px rgba(0,229,255,0.5), 0 1px 2px rgba(0,0,0,0.5);
+    transform: perspective(100px) translateZ(6px);
+  }
+  .snb-link .snb-num { font-size: 9px; opacity: .6; font-weight: 400; }
+  .snb-sep { width: 1px; height: 20px; background: #0d1f30; margin: 0 6px; flex-shrink: 0; }
+  .snb-arrows { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
+  .snb-arrow {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 4px;
+    border: 1.5px solid #00c8c8; background: rgba(0,200,200,0.08);
+    color: #00e5e5; text-decoration: none; font-size: 16px;
+    transition: background .2s, box-shadow .2s;
+  }
+  .snb-arrow:hover { background: rgba(0,200,200,0.22); box-shadow: 0 0 20px rgba(0,200,200,0.25); }
+  .snb-arrow.snb-disabled { opacity: 0.25; pointer-events: none; }
+  .snb-count { font-family: 'Share Tech Mono','JetBrains Mono',monospace; font-size: 13px; color: #445566; letter-spacing: 2px; min-width: 60px; text-align: center; }
+  .snb-count span { color: #00c8c8; font-weight: 700; }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 13px;
+    color: #FFA726;
+    font-family: 'Exo 2', sans-serif;
+    letter-spacing: 0.3px;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div class="header-banner">
+  <div class="header-content">
+    <div class="header-brand">
+      <div class="hb-top">T H E</div>
+      <div class="hb-name"><span class="hb-market">MARKET</span> <span class="hb-sniffer">SNIFFER</span></div>
+    </div>
+    <div class="site-nav-bar">
+      <a class="snb-arrow" href="8.html">&#8592;</a>
+      <div class="snb-links">
+        <a class="snb-link" href="1.html"><span class="snb-num">1.</span>NIFTY 50</a>
+        <a class="snb-link" href="2.html"><span class="snb-num">2.</span>SECTORS</a>
+        <a class="snb-link" href="5.html"><span class="snb-num">3.</span>FII/DII</a>
+        <a class="snb-link" href="3.html"><span class="snb-num">4.</span>OI</a>
+        <a class="snb-link" href="4.html"><span class="snb-num">5.</span>PCR</a>
+        <a class="snb-link" href="8.html"><span class="snb-num">6.</span>S&R</a>
+        <a class="snb-link snb-active" href="6.html"><span class="snb-num">7.</span>LB/SB</a>
+        <a class="snb-link" href="7.html"><span class="snb-num">8.</span>COMBINED</a>
+      </div>
+      <a class="snb-arrow" href="7.html">&#8594;</a>
+    </div>
+  </div>
+</div>
+
+<div class="error-banner" id="errorBanner"></div>
+
+<div class="slide-container">
+  <div class="spiral-binding">
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+  </div>
+  <div class="slide" id="slide">
+
+    <!-- HEADER -->
+    <div class="s-header">
+      <div class="header-left">
+        <div class="s-title" id="mainTitle" contenteditable="false" data-ef>OI BUILD-UP ANALYSIS</div>
+        <div class="subtitle-row">
+          <span id="subtitle1" contenteditable="false" data-ef>NIFTY 50 — Open Interest Build-up Activity</span>
+          &nbsp; | &nbsp;
+          <span id="subtitle2" contenteditable="false" data-ef>Long Buildup | Short Buildup</span>
+        </div>
+      </div>
+      <div class="brand-wrap">
+        <div class="brand-the">T H E</div>
+        <div class="brand-name">
+          <span class="mkt">MARKET&nbsp;</span><span class="snf">SNIFFER</span>
+        </div>
+       </div>
+    </div>
+
+    <!-- 2-PANEL GRID -->
+    <div class="panels-grid">
+
+      <!-- LONG BUILDUP -->
+      <div class="panel lb">
+        <div class="panel-header">
+          <div class="ph-top">
+            <span class="ph-arrow" id="lb-arrow" contenteditable="false" data-ef>▲</span>
+            <span id="lb-title" contenteditable="false" data-ef>LONG BUILDUP</span>
+          </div>
+          <div class="ph-sub" id="lb-sub" contenteditable="false" data-ef>Price ↑ OI ↑ — Fresh Buying</div>
+        </div>
+        <div class="stock-cards" id="lb-cards"></div>
+      </div>
+
+      <!-- SHORT BUILDUP -->
+      <div class="panel sb">
+        <div class="panel-header">
+          <div class="ph-top">
+            <span class="ph-arrow" id="sb-arrow" contenteditable="false" data-ef>▼</span>
+            <span id="sb-title" contenteditable="false" data-ef>SHORT BUILDUP</span>
+          </div>
+          <div class="ph-sub" id="sb-sub" contenteditable="false" data-ef>Price ↓ OI ↑ — Fresh Selling</div>
+        </div>
+        <div class="stock-cards" id="sb-cards"></div>
+      </div>
+
+    </div>
+
+    <!-- LEGEND -->
+    <div class="legend-bar" id="legendBar"></div>
+
+    <div class="disclaimer">For educational purposes only. Not SEBI registered advice. Consult a certified financial advisor before trading.</div>
+</div><!-- /slide -->
+
+</div><!-- /slide-container -->
+
+<!-- BUTTONS OUTSIDE SLIDE -->
+<div style="display:flex;gap:10px;margin-bottom:20px;">
+  <button class="tbtn tbtn-edit" id="editBtn" onclick="toggleEdit()">✏ EDIT MODE</button>
+  <button class="tbtn tbtn-json" id="jsonBtn" onclick="updateFromJSON()">🔄 UPDATE FROM JSON</button>
+</div>
+
+<script>
+  // ────────────────────────────────────────────────────────────────────────
+  // EDIT MODE & LOCALSTORAGE
+  // ────────────────────────────────────────────────────────────────────────
+  const STORAGE_KEY = 'page6_edited_data';
+  let editMode = false;
+  let currentData = {};
+
+  const pillPos = v => String(v).startsWith('+') ? 'pill-price-pos' : 'pill-price-neg';
+
+  function renderCards(panel, stocks, editable = false) {
+    const maxOi = Math.max(...stocks.map(s => Math.abs(parseFloat(s.oiChg)) || 1), 1);
+    document.getElementById(`${panel}-cards`).innerHTML = stocks.map((s, i) => {
+      const barW = Math.round((Math.abs(parseFloat(s.oiChg)) / maxOi) * 100);
+      const ce = editable ? 'true' : 'false';
+      return `
+      <div class="stock-card">
+        <div class="sc-top">
+          <div class="sc-rank">${i + 1}</div>
+          <div class="sc-name" id="${panel}-${i}-name" contenteditable="${ce}" data-ef>${s.name}</div>
+          <div class="sc-oi" id="${panel}-${i}-oi" contenteditable="${ce}" data-ef>${s.oi}</div>
+        </div>
+        <div class="sc-metrics">
+          <span class="metric-pill ${pillPos(s.price)}" id="${panel}-${i}-price" contenteditable="${ce}" data-ef>${s.price}</span>
+          <span class="metric-pill-oi ${pillPos(s.oiChg)}" id="${panel}-${i}-oiChg" contenteditable="${ce}" data-ef>${s.oiChg}</span>
+          <span class="sc-multiplier" id="${panel}-${i}-mult" contenteditable="${ce}" data-ef>${s.mult}</span>
+        </div>
+        <div class="sc-bar" style="width:${barW}%;"></div>
+      </div>`;
+    }).join('');
+  }
+
+  function renderLegend(items, editable = false) {
+    const ce = editable ? 'true' : 'false';
+    document.getElementById('legendBar').innerHTML = items.map((l, i) => `
+      <div class="legend-item">
+        <div class="legend-dot" style="background:${l.color};" id="legend-${i}-color" data-color="${l.color}"></div>
+        <span id="legend-${i}-label" contenteditable="${ce}" data-ef>${l.label}</span>
+      </div>`).join('');
+  }
+
+  function toggleEdit() {
+    const slide = document.getElementById('slide');
+    const btn = document.getElementById('editBtn');
+    const editable = slide.querySelectorAll('[data-ef]');
+
+    editMode = !editMode;
+
+    if (editMode) {
+      // Enter edit mode
+      slide.classList.add('edit');
+      btn.classList.add('on');
+      btn.textContent = '💾 SAVE EDITS';
+      editable.forEach(el => el.contentEditable = 'true');
+    } else {
+      // Save and exit edit mode
+      slide.classList.remove('edit');
+      btn.classList.remove('on');
+      btn.textContent = '✏ EDIT MODE';
+      editable.forEach(el => el.contentEditable = 'false');
+
+      // Collect edited data
+      currentData.mainTitle = document.getElementById('mainTitle').textContent.trim();
+      currentData.subtitle1 = document.getElementById('subtitle1').textContent.trim();
+      currentData.subtitle2 = document.getElementById('subtitle2').textContent.trim();
+
+      // Panel labels
+      ['lb', 'sb'].forEach(p => {
+        currentData[p + 'Arrow'] = document.getElementById(`${p}-arrow`).textContent.trim();
+        currentData[p + 'Title'] = document.getElementById(`${p}-title`).textContent.trim();
+        currentData[p + 'Sub'] = document.getElementById(`${p}-sub`).textContent.trim();
+      });
+
+      // Collect stock cards
+      ['lb', 'sb'].forEach(panel => {
+        currentData[panel] = [];
+        for (let i = 0; i < 5; i++) {
+          const nameEl = document.getElementById(`${panel}-${i}-name`);
+          const oiEl = document.getElementById(`${panel}-${i}-oi`);
+          const priceEl = document.getElementById(`${panel}-${i}-price`);
+          const oiChgEl = document.getElementById(`${panel}-${i}-oiChg`);
+          const multEl = document.getElementById(`${panel}-${i}-mult`);
+          if (nameEl && oiEl && priceEl && oiChgEl && multEl) {
+            currentData[panel].push({
+              name: nameEl.textContent.trim(),
+              oi: oiEl.textContent.trim(),
+              price: priceEl.textContent.trim(),
+              oiChg: oiChgEl.textContent.trim(),
+              mult: multEl.textContent.trim()
+            });
+          }
+        }
+      });
+
+      // Collect legend
+      currentData.legend = [];
+      for (let i = 0; i < 2; i++) {
+        const labelEl = document.getElementById(`legend-${i}-label`);
+        const colorEl = document.getElementById(`legend-${i}-color`);
+        if (labelEl && colorEl) {
+          currentData.legend.push({
+            label: labelEl.textContent.trim(),
+            color: colorEl.getAttribute('data-color') || '#00e676'
+          });
+        }
+      }
+
+      // Save to localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+      console.log('✓ Saved to localStorage:', currentData);
+
+      // Re-render with saved data (non-editable)
+      if (Array.isArray(currentData.lb)) renderCards('lb', currentData.lb, false);
+      if (Array.isArray(currentData.sb)) renderCards('sb', currentData.sb, false);
+      if (Array.isArray(currentData.legend)) renderLegend(currentData.legend, false);
+    }
+  }
+
+  // Update from JSON and clear localStorage
+  async function updateFromJSON() {
+    if (editMode) {
+      alert('Please exit edit mode first (save or cancel).');
+      return;
+    }
+    localStorage.removeItem(STORAGE_KEY);
+    console.log('✓ Cleared localStorage, reloading from JSON...');
+    await loadData();
+  }
+
+  // Load JSON data
+  async function loadData() {
+    try {
+      const res = await fetch('oibuildup.json');
+      if (!res.ok) throw new Error(`oibuildup.json not found (HTTP ${res.status})`);
+      const d = await res.json();
+
+      currentData = { ...d };
+
+      // Header
+      if (d.mainTitle) document.getElementById('mainTitle').textContent = d.mainTitle;
+      if (d.subtitle1) document.getElementById('subtitle1').textContent = d.subtitle1;
+      if (d.subtitle2) document.getElementById('subtitle2').textContent = d.subtitle2;
+
+      // Panel labels
+      ['lb', 'sb'].forEach(p => {
+        if (d[p + 'Arrow']) document.getElementById(`${p}-arrow`).textContent = d[p + 'Arrow'];
+        if (d[p + 'Title']) document.getElementById(`${p}-title`).textContent = d[p + 'Title'];
+        if (d[p + 'Sub']) document.getElementById(`${p}-sub`).textContent = d[p + 'Sub'];
+      });
+
+      // Stock cards
+      if (Array.isArray(d.lb)) renderCards('lb', d.lb, false);
+      if (Array.isArray(d.sb)) renderCards('sb', d.sb, false);
+
+      // Legend
+      if (Array.isArray(d.legend)) renderLegend(d.legend, false);
+
+    } catch (err) {
+      const banner = document.getElementById('errorBanner');
+      banner.style.display = 'block';
+      banner.textContent = '⚠ ' + err.message + ' — Make sure oibuildup.json is in the same folder and served via a local server.';
+      console.error(err);
+    }
+  }
+
+  // Initialize: check localStorage first, then JSON
+  async function initData() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const d = JSON.parse(stored);
+        currentData = d;
+        console.log('✓ Loaded from localStorage:', d);
+
+        // Apply stored data
+        if (d.mainTitle) document.getElementById('mainTitle').textContent = d.mainTitle;
+        if (d.subtitle1) document.getElementById('subtitle1').textContent = d.subtitle1;
+        if (d.subtitle2) document.getElementById('subtitle2').textContent = d.subtitle2;
+
+        // Panel labels
+        ['lb', 'sb'].forEach(p => {
+          if (d[p + 'Arrow']) document.getElementById(`${p}-arrow`).textContent = d[p + 'Arrow'];
+          if (d[p + 'Title']) document.getElementById(`${p}-title`).textContent = d[p + 'Title'];
+          if (d[p + 'Sub']) document.getElementById(`${p}-sub`).textContent = d[p + 'Sub'];
+        });
+
+        // Stock cards
+        if (Array.isArray(d.lb)) renderCards('lb', d.lb, false);
+        if (Array.isArray(d.sb)) renderCards('sb', d.sb, false);
+
+        // Legend
+        if (Array.isArray(d.legend)) renderLegend(d.legend, false);
+
+      } catch (e) {
+        console.error('Error parsing localStorage, loading from JSON:', e);
+        await loadData();
+      }
+    } else {
+      await loadData();
+    }
+  }
+
+  initData();
+</script>
+
+</body>
+</html>

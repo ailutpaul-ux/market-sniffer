@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combined Analysis Summary</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;600;700&family=Barlow+Condensed:wght@700;800;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0f1c; --card:#0f1828; --card2:#111f30;
+  --cyan:#00e5ff; --yellow:#ffd600; --green:#00e676;
+  --red:#ff3d57; --orange:#ff9100; --text:#e8eaf6; --dim:#546e7a; --border:#1a2d40;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#04080f;font-family:'Barlow',sans-serif;color:var(--text);min-height:100vh;display:flex;flex-direction:column;justify-content:flex-start;align-items:center;margin:0;padding:0;}
+
+/* ── BUTTON OUTSIDE SLIDE ── */
+.tbtn{padding:9px 20px;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:700;border:none;border-radius:4px;cursor:pointer;letter-spacing:1px;transition:all .2s;position:relative;z-index:100;margin-top:18px;}
+.tbtn-edit{background:var(--cyan);color:#000;}.tbtn-edit:hover{background:#00b8d4;}.tbtn-edit.on{background:var(--green);}
+.tbtn-json{background:#ffa726;color:#000;margin-left:10px;}.tbtn-json:hover{background:#ff9800;}
+
+/* ── ERROR BANNER ── */
+.err-banner{display:none;max-width:1050px;margin:0 auto 10px;padding:9px 14px;background:#2a060e;border:1px solid var(--red);border-radius:3px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--red);}
+
+/* ── SLIDE CONTAINER WITH SPIRAL BINDING ── */
+.slide-container {
+  position: relative;
+  width: 1050px;
+  margin: 0 auto;
+  padding-top: 0;
+}
+
+/* Spiral Binding Loops */
+.spiral-binding {
+  position: absolute;
+  top: -15px;
+  left: 0;
+  width: 100%;
+  height: 30px;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.spiral-loop {
+  width: 20px;
+  height: 30px;
+  border: 3px solid;
+  border-color: transparent;
+  border-left-color: #00b8d4;
+  border-right-color: #00e5ff;
+  border-radius: 50%;
+  position: relative;
+  background: linear-gradient(90deg, 
+    rgba(0,184,212,0.3) 0%, 
+    rgba(0,229,255,0.15) 50%, 
+    rgba(0,184,212,0.3) 100%);
+  box-shadow: 
+    inset -2px 0 4px rgba(0,229,255,0.6),
+    inset 2px 0 4px rgba(0,184,212,0.4),
+    0 2px 8px rgba(0,229,255,0.3),
+    0 0 15px rgba(0,229,255,0.2);
+  animation: spiralShine 3s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+
+.spiral-loop:nth-child(even) {
+  animation-delay: 0.15s;
+}
+
+.spiral-loop::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 24px;
+  border: 2px solid rgba(0,229,255,0.4);
+  border-radius: 50%;
+  background: radial-gradient(ellipse at 30% 40%, 
+    rgba(255,255,255,0.15) 0%, 
+    transparent 50%);
+}
+
+.spiral-loop::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 4px;
+  height: 8px;
+  background: rgba(255,255,255,0.5);
+  border-radius: 50%;
+  filter: blur(1px);
+}
+
+@keyframes spiralShine {
+  0%, 100% {
+    box-shadow: 
+      inset -2px 0 4px rgba(0,229,255,0.6),
+      inset 2px 0 4px rgba(0,184,212,0.4),
+      0 2px 8px rgba(0,229,255,0.3),
+      0 0 15px rgba(0,229,255,0.2);
+  }
+  50% {
+    box-shadow: 
+      inset -2px 0 6px rgba(0,229,255,0.8),
+      inset 2px 0 6px rgba(0,184,212,0.6),
+      0 2px 12px rgba(0,229,255,0.5),
+      0 0 20px rgba(0,229,255,0.35);
+  }
+}
+
+/* ── SLIDE ── */
+.slide{width:1050px;margin:20px auto 0;background:#0e1628;border-top:5px solid var(--cyan);border-bottom:5px solid var(--cyan);position:relative;overflow:hidden;height:700px;padding-bottom:45px;
+box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(0,229,255,0.15);}
+.slide::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:70%;background:linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);border-radius:0 2px 2px 0;z-index:2;}
+.slide::after{content:'';position:absolute;right:0;top:50%;transform:translateY(-50%);width:4px;height:70%;background:linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);border-radius:2px 0 0 2px;z-index:2;}
+.slide.edit [data-ef]{outline:1.5px dashed rgba(0,229,255,0.35);cursor:text;border-radius:2px;}
+.slide.edit [data-ef]:hover{outline-color:var(--cyan);}
+.slide.edit [data-ef]:focus{outline:2px solid var(--cyan);background:rgba(0,229,255,0.04);}
+
+/* ── HEADER ── */
+.s-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  padding:14px 22px 8px;
+  background: linear-gradient(135deg, #0b1019 0%, #0d1520 40%, #0f1a28 100%);
+  border-bottom: 3px solid #00e5ff;
+  box-shadow: 0 4px 15px rgba(0,229,255,0.2);
+  position:relative;
+}
+.s-head::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 70%;
+  background: linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);
+  border-radius: 0 2px 2px 0;
+}
+.s-title{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:62px;
+  letter-spacing:3px;
+  line-height:1;
+  color:#fff;
+  text-shadow: 0 0 20px rgba(0,229,255,0.3), 0 2px 4px rgba(0,0,0,0.5);
+  background: linear-gradient(180deg, #ffffff 0%, #c8d6e5 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.brand{
+  text-align:right;
+  flex-shrink:0;
+  padding: 10px 14px;
+  background: rgba(0,229,255,0.04);
+  border: 1px solid rgba(0,229,255,0.15);
+  border-radius: 3px;
+  box-shadow: 0 0 15px rgba(0,229,255,0.1);
+}
+.brand-the{
+  font-family: 'Courier New', Courier, monospace;
+  color: #00e5ff;
+  font-size:11px;
+  letter-spacing:4px;
+  font-weight:700;
+  text-shadow: 0 0 10px rgba(0,229,255,0.6);
+}
+.brand-name{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:26px;
+  letter-spacing:1.5px;
+  line-height:1.05;
+  white-space:nowrap;
+}
+.brand-name .red, .brand-name .mkt, #brandMkt { 
+  color: #ff6b6b;
+  text-shadow: 0 0 8px rgba(255,107,107,0.4);
+}
+.brand-name .white, .brand-name .snf, #brandSnf { 
+  color: #ffffff;
+  text-shadow: 0 0 8px rgba(255,255,255,0.3);
+}
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.subtitle-row {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--cyan);
+  letter-spacing: 0.3px;
+}
+.subtitle-row span { color: var(--cyan); }
+
+/* ── OLD SUBTITLE (not used) ── */
+.s-subbar{padding:6px 22px 7px;background:#0a1020;border-bottom:1px solid #12202e;}
+.s-subtitle{font-family:'JetBrains Mono',monospace;font-size:11px;}
+
+/* ── ANALYSIS ROWS ── */
+.rows-wrap{display:flex;flex-direction:column;gap:0;padding:8px 14px;}
+.analysis-row{
+  display:grid;grid-template-columns:220px 1fr 180px;
+  align-items:center;gap:14px;padding:13px 16px;
+  border-bottom:1px solid rgba(26,45,64,0.5);
+  position:relative;transition:background .15s;
+}
+.analysis-row:hover{background:rgba(255,255,255,0.015);}
+.analysis-row.highlighted{background:rgba(0,229,255,0.06);}
+.row-icon-name{display:flex;align-items:center;gap:9px;}
+.row-icon{font-size:18px;flex-shrink:0;}
+.row-name{font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:800;color:var(--text);letter-spacing:0.5px;}
+.row-desc{font-family:'Barlow',sans-serif;font-size:13px;color:#8fa8b8;}
+.row-badge{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;text-align:right;white-space:nowrap;}
+
+/* ── VERDICT BOX ── */
+.verdict-wrap{padding:6px 14px;}
+.verdict-box{border-radius:3px;padding:18px 22px;display:flex;align-items:flex-start;gap:14px;overflow:hidden;}
+.verdict-icon{font-size:28px;flex-shrink:0;margin-top:2px;}
+.verdict-text{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;line-height:1.55;letter-spacing:0.3px;}
+
+/* ══════ EDIT PANEL ══════ */
+.edit-panel{display:none;width:1050px;margin:12px auto 0;background:#0f1520;border:1px solid var(--cyan);border-radius:4px;padding:22px;}
+.edit-panel.open{display:block;}
+.ep-h{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--cyan);margin-bottom:14px;}
+.ep-sec{font-size:9px;color:var(--yellow);font-family:'JetBrains Mono',monospace;letter-spacing:2px;text-transform:uppercase;padding-bottom:4px;border-bottom:1px solid var(--border);margin:16px 0 10px;}
+.ep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(185px,1fr));gap:10px;}
+.fg{display:flex;flex-direction:column;gap:4px;}
+.fg label{font-size:9px;color:var(--dim);font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;}
+.fg input,.fg select,.fg textarea{background:#080c14;border:1px solid var(--border);color:var(--text);padding:7px 9px;font-family:'JetBrains Mono',monospace;font-size:11px;border-radius:3px;outline:none;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--cyan);}
+.fg input[type=color]{height:34px;padding:2px 4px;cursor:pointer;}
+
+.are{background:#080c14;border:1px solid var(--border);border-radius:3px;padding:8px 10px;margin-bottom:6px;display:flex;flex-direction:column;gap:6px;}
+.are-row1{display:grid;grid-template-columns:50px 1fr 1fr 50px 50px 32px;gap:6px;align-items:center;}
+.are-row2{display:grid;grid-template-columns:1fr 1fr 60px;gap:6px;align-items:center;}
+.are input,.are select{background:#0f1520;border:1px solid var(--border);color:var(--text);padding:5px 7px;font-family:'JetBrains Mono',monospace;font-size:11px;border-radius:3px;outline:none;width:100%;}
+.are input:focus,.are select:focus{border-color:var(--cyan);}
+.are-label{font-size:9px;color:var(--dim);font-family:'JetBrains Mono',monospace;letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:2px;}
+.are input[type=color]{height:30px;padding:2px 3px;cursor:pointer;}
+
+.btn-apply{background:var(--cyan);color:#000;border:none;padding:10px 26px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;cursor:pointer;border-radius:3px;margin-top:16px;letter-spacing:1px;}
+.btn-apply:hover{background:#00b8d4;}
+.btn-add{background:transparent;border:1px solid var(--green);color:var(--green);padding:6px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;cursor:pointer;border-radius:3px;margin-top:6px;letter-spacing:1px;}
+.btn-add:hover{background:rgba(0,230,118,0.08);}
+.btn-del{background:transparent;color:var(--red);border:none;cursor:pointer;font-size:12px;padding:3px 5px;border-radius:2px;}
+.btn-del:hover{background:rgba(255,61,87,0.12);}
+
+.section-divider{display:flex;flex-direction:column;gap:6px;background:rgba(255,61,87,0.04);border:1px solid rgba(255,61,87,0.25);border-radius:3px;padding:10px;margin-bottom:6px;}
+.section-divider input,.section-divider textarea{background:#0f1520;border:1px solid var(--border);color:var(--text);padding:6px 8px;font-family:'JetBrains Mono',monospace;font-size:11px;border-radius:3px;outline:none;width:100%;}
+.section-divider textarea{resize:vertical;min-height:60px;}
+
+[contenteditable]{outline:none;}
+
+  /* ── HEADER BANNER ── */
+  .header-banner {
+    width: 100%;
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
+    border-bottom: 3px solid #00e5ff;
+    box-shadow: 0 4px 20px rgba(0,229,255,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+  }
+  .header-content {
+    max-width: 1050px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    padding: 0 15px;
+    position: relative;
+  }
+  .header-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(180deg, transparent, #00e5ff, transparent);
+    border-radius: 2px;
+  }
+  .header-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hb-top {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #00e5ff;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0,229,255,0.5);
+    text-align: right;
+  }
+  .hb-name {
+    font-family: 'Bebas Neue', Arial, sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .hb-market { 
+    color: #ff6b6b;
+    text-shadow: 0 0 8px rgba(255,107,107,0.4);
+  }
+  .hb-sniffer { 
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.3);
+  }
+
+  /* ── SITE NAV ── */
+  .site-nav-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; flex-wrap: wrap; row-gap: 6px;
+  }
+  .snb-links { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .snb-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 11px; border-radius: 5px; text-decoration: none;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    color: #ffffff; 
+    background: linear-gradient(135deg, rgba(15,25,35,0.8) 0%, rgba(20,30,40,0.5) 100%);
+    border: 1px solid rgba(0,229,255,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3);
+    transition: all .25s ease; white-space: nowrap;
+    position: relative;
+    transform: perspective(100px) translateZ(0);
+  }
+  .snb-link:hover { 
+    color: #b8d4e0; 
+    background: linear-gradient(135deg, rgba(0,229,255,0.12) 0%, rgba(0,229,255,0.06) 100%);
+    border-color: rgba(0,229,255,0.4);
+    box-shadow: 0 4px 8px rgba(0,229,255,0.15), 0 0 16px rgba(0,229,255,0.2), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.2);
+    transform: perspective(100px) translateZ(4px);
+  }
+  .snb-link.snb-active { 
+    color: #00e5ff; 
+    background: linear-gradient(135deg, rgba(0,229,255,0.2) 0%, rgba(0,229,255,0.12) 100%);
+    border-color: rgba(0,229,255,0.6);
+    box-shadow: 0 6px 12px rgba(0,229,255,0.25), 0 0 24px rgba(0,229,255,0.35), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.15);
+    text-shadow: 0 0 10px rgba(0,229,255,0.5), 0 1px 2px rgba(0,0,0,0.5);
+    transform: perspective(100px) translateZ(6px);
+  }
+  .snb-link .snb-num { font-size: 9px; opacity: .6; font-weight: 400; }
+  .snb-sep { width: 1px; height: 20px; background: #0d1f30; margin: 0 6px; flex-shrink: 0; }
+  .snb-arrows { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
+  .snb-arrow {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 4px;
+    border: 1.5px solid #00c8c8; background: rgba(0,200,200,0.08);
+    color: #00e5e5; text-decoration: none; font-size: 16px;
+    transition: background .2s, box-shadow .2s;
+  }
+  .snb-arrow:hover { background: rgba(0,200,200,0.22); box-shadow: 0 0 20px rgba(0,200,200,0.25); }
+  .snb-arrow.snb-disabled { opacity: 0.25; pointer-events: none; }
+  .snb-count { font-family: 'Share Tech Mono','JetBrains Mono',monospace; font-size: 13px; color: #445566; letter-spacing: 2px; min-width: 60px; text-align: center; }
+  .snb-count span { color: #00c8c8; font-weight: 700; }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 13px;
+    color: #FFA726;
+    font-family: 'Exo 2', sans-serif;
+    letter-spacing: 0.3px;
+    z-index: 100;
+  }
+</style>
+</head>
+<body>
+
+<div class="header-banner">
+  <div class="header-content">
+    <div class="header-brand">
+      <div class="hb-top">T H E</div>
+      <div class="hb-name"><span class="hb-market">MARKET</span> <span class="hb-sniffer">SNIFFER</span></div>
+    </div>
+    <div class="site-nav-bar">
+      <a class="snb-arrow" href="6.html">&#8592;</a>
+      <div class="snb-links">
+        <a class="snb-link" href="1.html"><span class="snb-num">1.</span>NIFTY 50</a>
+        <a class="snb-link" href="2.html"><span class="snb-num">2.</span>SECTORS</a>
+        <a class="snb-link" href="5.html"><span class="snb-num">3.</span>FII/DII</a>
+        <a class="snb-link" href="3.html"><span class="snb-num">4.</span>OI</a>
+        <a class="snb-link" href="4.html"><span class="snb-num">5.</span>PCR</a>
+        <a class="snb-link" href="8.html"><span class="snb-num">6.</span>S&R</a>
+        <a class="snb-link" href="6.html"><span class="snb-num">7.</span>LB/SB</a>
+        <a class="snb-link snb-active" href="7.html"><span class="snb-num">8.</span>COMBINED</a>
+      </div>
+      <a class="snb-arrow snb-disabled">&#8594;</a>
+    </div>
+  </div>
+</div>
+
+<div class="err-banner" id="errBanner"></div>
+
+<!-- SLIDE WITH SPIRAL BINDING -->
+<div class="slide-container">
+  <div class="spiral-binding">
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+  </div>
+  <div class="slide" id="slide">
+  <div class="s-head" id="slideHead">
+    <div class="header-left">
+      <div class="s-title" id="mainTitle" data-ef contenteditable="false">COMBINED ANALYSIS SUMMARY</div>
+      <div class="subtitle-row">
+        <span id="subtitle1" data-ef contenteditable="false">Confluence of PCR + OI + FII + Support/Resistance</span>
+        &nbsp; | &nbsp;
+        <span id="subtitle2" data-ef contenteditable="false">Market Verdict</span>
+      </div>
+    </div>
+    <div class="brand">
+      <div class="brand-the" id="brandThe" data-ef contenteditable="false">T H E</div>
+      <div class="brand-name">
+        <span class="red" id="brandMkt" data-ef contenteditable="false">MARKET </span><span class="white" id="brandSnf" data-ef contenteditable="false">SNIFFER</span>
+      </div>
+    </div>
+  </div>
+  <div class="rows-wrap" id="topRows"></div>
+  <div class="verdict-wrap" id="verdictWrap"></div>
+  <div class="rows-wrap" id="bottomRows"></div>
+  
+  <div class="disclaimer">For educational purposes only. Not SEBI registered advice. Consult a certified financial advisor before trading.</div>
+</div>
+
+</div><!-- /slide-container -->
+
+<!-- BUTTON OUTSIDE SLIDE -->
+<div style="display:flex;gap:10px;margin-bottom:20px;align-items:center;">
+  <button class="tbtn tbtn-edit" id="editBtn" onclick="toggleEdit()">✏ EDIT MODE</button>
+  <button class="tbtn tbtn-json" onclick="updateFromJSON()">🔄 UPDATE FROM JSON</button>
+  <span style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);" id="hint"></span>
+</div>
+
+<!-- EDIT PANEL -->
+<div class="edit-panel" id="editPanel">
+  <div class="ep-h">⚙ CONFIGURE DASHBOARD</div>
+
+  <div class="ep-sec">Global Colors &amp; Slide Style</div>
+  <div class="ep-grid">
+    <div class="fg"><label>Slide BG</label><input type="color" id="gc_bg" value="#0a0f1c" oninput="applyGlobal()"></div>
+    <div class="fg"><label>Top/Bottom Bar</label><input type="color" id="gc_bar" value="#00e5ff" oninput="applyGlobal()"></div>
+    <div class="fg"><label>Header BG</label><input type="color" id="gc_head" value="#0a1020" oninput="applyGlobal()"></div>
+    <div class="fg"><label>Subtitle Color</label><input type="color" id="gc_sub" value="#00e5ff" oninput="applyGlobal()"></div>
+    <div class="fg"><label>Title Color</label><input type="color" id="gc_title" value="#ffffff" oninput="applyGlobal()"></div>
+    <div class="fg"><label>Row BG</label><input type="color" id="gc_rowbg" value="#0a0f1c" oninput="applyGlobal()"></div>
+    <div class="fg"><label>Row Desc Text</label><input type="color" id="gc_rowdesc" value="#8fa8b8" oninput="applyGlobal()"></div>
+  </div>
+
+  <div class="ep-sec">Header Text &amp; Brand</div>
+  <div class="ep-grid">
+    <div class="fg"><label>Main Title</label><input id="in_title"></div>
+    <div class="fg"><label>Brand "THE"</label><input id="in_brandThe"></div>
+    <div class="fg"><label>Brand Word 1</label><input id="in_brandMkt"></div>
+    <div class="fg"><label>Brand Word 1 Color</label><input type="color" id="in_brandMktCol" value="#ff3d57" oninput="applyGlobal()"></div>
+    <div class="fg"><label>Brand Word 2</label><input id="in_brandSnf"></div>
+    <div class="fg"><label>Brand Word 2 Color</label><input type="color" id="in_brandSnfCol" value="#ffffff" oninput="applyGlobal()"></div>
+    <div class="fg" style="grid-column:1/-1;"><label>Subtitle</label><input id="in_sub"></div>
+  </div>
+
+  <div class="ep-sec">Analysis Rows — TOP (before verdict)</div>
+  <div style="font-size:9px;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-bottom:6px;letter-spacing:1px;">ICON | NAME | DESCRIPTION | ACCENT COLOR | HIGHLIGHT? | BADGE TEXT | BADGE COLOR</div>
+  <div id="topRowEditors"></div>
+  <button class="btn-add" onclick="addRow('top')">＋ Add Row (Top)</button>
+
+  <div class="ep-sec">Verdict Box</div>
+  <div class="section-divider">
+    <label class="are-label">Verdict Icon</label>
+    <input id="vd_icon" value="⚡">
+    <label class="are-label" style="margin-top:4px;">Verdict Text</label>
+    <textarea id="vd_text" rows="3"></textarea>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px;">
+      <div class="fg"><label>BG Color</label><input type="color" id="vd_bg" value="#cc0000"></div>
+      <div class="fg"><label>Text Color</label><input type="color" id="vd_text_col" value="#ffffff"></div>
+      <div class="fg"><label>Border Color</label><input type="color" id="vd_border" value="#ff3d57"></div>
+    </div>
+  </div>
+
+  <div class="ep-sec">Analysis Rows — BOTTOM (after verdict)</div>
+  <div style="font-size:9px;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-bottom:6px;letter-spacing:1px;">ICON | NAME | DESCRIPTION | ACCENT COLOR | HIGHLIGHT? | BADGE TEXT | BADGE COLOR</div>
+  <div id="bottomRowEditors"></div>
+  <button class="btn-add" onclick="addRow('bottom')">＋ Add Row (Bottom)</button>
+
+  <div><button class="btn-apply" onclick="applyAll()">▶ APPLY CHANGES</button></div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// LIVE DATA STATE & LOCALSTORAGE
+// ══════════════════════════════════════════
+const STORAGE_KEY = 'page7_edited_data';
+let currentData = {};
+let topRows    = [];
+let bottomRows = [];
+let verdict    = { icon:'⚡', text:'', bg:'#cc0000', textColor:'#ffffff', borderColor:'#ff3d57' };
+
+// ══════════════════════════════════════════
+// RENDER SLIDE
+// ══════════════════════════════════════════
+function renderRows(data, containerId) {
+  document.getElementById(containerId).innerHTML = data.map(row => `
+    <div class="analysis-row${row.highlight?' highlighted':''}" style="border-left:4px solid ${row.accentColor};">
+      <div class="row-icon-name">
+        <span class="row-icon">${row.icon}</span>
+        <span class="row-name">${row.name}</span>
+      </div>
+      <div class="row-desc">${row.desc}</div>
+      <div class="row-badge" style="color:${row.badgeColor};">${row.badge}</div>
+    </div>`).join('');
+}
+
+function renderVerdict() {
+  document.getElementById('verdictWrap').innerHTML = `
+    <div class="verdict-box" style="background:${verdict.bg};border:2px solid ${verdict.borderColor};">
+      <div class="verdict-icon">${verdict.icon}</div>
+      <div class="verdict-text" style="color:${verdict.textColor};">${verdict.text.replace(/\n/g,'<br>')}</div>
+    </div>`;
+}
+
+function renderSlide() {
+  renderRows(topRows, 'topRows');
+  renderVerdict();
+  renderRows(bottomRows, 'bottomRows');
+}
+
+// ══════════════════════════════════════════
+// APPLY GLOBAL COLORS
+// ══════════════════════════════════════════
+function applyGlobal() {
+  const v = id => document.getElementById(id)?.value;
+  const slide = document.getElementById('slide');
+  slide.style.background        = v('gc_bg')       || '#0a0f1c';
+  slide.style.borderTopColor    = v('gc_bar')      || '#00e5ff';
+  slide.style.borderBottomColor = v('gc_bar')      || '#00e5ff';
+  document.getElementById('slideHead').style.background = v('gc_head') || '#0a1020';
+  document.getElementById('mainTitle').style.color      = v('gc_title')|| '#ffffff';
+  document.getElementById('brandMkt').style.color = v('in_brandMktCol') || '#ff3d57';
+  document.getElementById('brandSnf').style.color = v('in_brandSnfCol') || '#ffffff';
+  document.querySelectorAll('.analysis-row').forEach(el => el.style.background = v('gc_rowbg') || '#0a0f1c');
+  document.querySelectorAll('.row-desc').forEach(el => el.style.color = v('gc_rowdesc') || '#8fa8b8');
+}
+
+// ══════════════════════════════════════════
+// POPULATE ALL EDIT INPUTS FROM DATA
+// ══════════════════════════════════════════
+function populateEditInputs(d) {
+  const set = (id, val) => { const el = document.getElementById(id); if (el && val != null) el.value = val; };
+
+  // Text fields
+  set('in_title',    d.mainTitle);
+  set('in_brandThe', d.brandThe);
+  set('in_brandMkt', d.brandMkt);
+  set('in_brandSnf', d.brandSnf);
+  set('in_sub',      d.subtitle || '');
+
+  // Verdict
+  set('vd_icon',     verdict.icon);
+  set('vd_text',     verdict.text);
+  set('vd_bg',       verdict.bg);
+  set('vd_text_col', verdict.textColor);
+  set('vd_border',   verdict.borderColor);
+
+  // Global color pickers
+  if (d.colors) {
+    set('gc_bg',          d.colors.bg);
+    set('gc_bar',         d.colors.bar);
+    set('gc_head',        d.colors.head);
+    set('gc_sub',         d.colors.sub);
+    set('gc_title',       d.colors.title);
+    set('gc_foot',        d.colors.foot);
+    set('gc_foottext',    d.colors.foottext);
+    set('gc_rowbg',       d.colors.rowbg);
+    set('gc_rowdesc',     d.colors.rowdesc);
+    set('in_brandMktCol', d.colors.brandMkt);
+    set('in_brandSnfCol', d.colors.brandSnf);
+  }
+}
+
+// ══════════════════════════════════════════
+// JSON LOAD ON PAGE START
+// ══════════════════════════════════════════
+async function loadFromJson() {
+  try {
+    const res = await fetch('combined.json');
+    if (!res.ok) throw new Error(`HTTP ${res.status} — combined.json not found`);
+    const d = await res.json();
+    
+    // Store in currentData
+    currentData = { ...d };
+
+    // Header text → slide
+    if (d.mainTitle) document.getElementById('mainTitle').textContent = d.mainTitle;
+    if (d.brandThe)  document.getElementById('brandThe').textContent  = d.brandThe;
+    if (d.brandMkt)  document.getElementById('brandMkt').textContent  = d.brandMkt;
+    if (d.brandSnf)  document.getElementById('brandSnf').textContent  = d.brandSnf;
+    if (d.subtitle) {
+      const parts = d.subtitle.split('|');
+      if (parts[0]) document.getElementById('subtitle1').textContent = parts[0].trim();
+      if (parts[1]) document.getElementById('subtitle2').textContent = parts[1].trim();
+    }
+
+    // Rows
+    if (Array.isArray(d.topRows))    topRows    = d.topRows;
+    if (Array.isArray(d.bottomRows)) bottomRows = d.bottomRows;
+
+    // Verdict
+    if (d.verdict) Object.assign(verdict, d.verdict);
+
+    // Render slide
+    renderSlide();
+
+    // Populate all edit panel inputs with loaded values
+    populateEditInputs(d);
+
+    // Apply global colors
+    applyGlobal();
+
+    document.getElementById('hint').textContent = '';
+
+  } catch (err) {
+    const b = document.getElementById('errBanner');
+    b.style.display = 'block';
+    b.textContent = '⚠ ' + err.message + ' — Showing built-in defaults. Serve combined.json alongside this file using a local server (not file://).';
+    renderSlide();
+    applyGlobal();
+    document.getElementById('hint').textContent = 'Click EDIT MODE to configure every component including colors';
+  }
+}
+
+
+// ══════════════════════════════════════════
+// ROW EDITORS
+// ══════════════════════════════════════════
+function renderRowEditors(data, editorId) {
+  document.getElementById(editorId).innerHTML = data.map((row, i) => `
+    <div class="are" id="are_${editorId}_${i}">
+      <div class="are-row1">
+        <div>
+          <span class="are-label">Icon</span>
+          <input id="re_icon_${editorId}_${i}" value="${row.icon}" placeholder="🔥" style="text-align:center;">
+        </div>
+        <div>
+          <span class="are-label">Name / Label</span>
+          <input id="re_name_${editorId}_${i}" value="${row.name}" placeholder="Label">
+        </div>
+        <div>
+          <span class="are-label">Description</span>
+          <input id="re_desc_${editorId}_${i}" value="${row.desc}" placeholder="Description">
+        </div>
+        <div>
+          <span class="are-label">Accent</span>
+          <input type="color" id="re_acc_${editorId}_${i}" value="${row.accentColor}" style="height:30px;padding:2px 3px;cursor:pointer;width:100%;">
+        </div>
+        <div>
+          <span class="are-label">Highlight?</span>
+          <select id="re_hl_${editorId}_${i}" style="height:30px;">
+            <option value="0" ${!row.highlight?'selected':''}>No</option>
+            <option value="1" ${row.highlight?'selected':''}>Yes</option>
+          </select>
+        </div>
+        <button class="btn-del" onclick="deleteRow('${editorId}',${i})" style="margin-top:14px;">✕</button>
+      </div>
+      <div class="are-row2">
+        <div>
+          <span class="are-label">Badge Text</span>
+          <input id="re_badge_${editorId}_${i}" value="${row.badge}" placeholder="Badge">
+        </div>
+        <div>
+          <span class="are-label">Badge Color</span>
+          <input type="color" id="re_bcol_${editorId}_${i}" value="${row.badgeColor||'#ffffff'}" style="height:30px;padding:2px 3px;cursor:pointer;width:100%;">
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <div style="min-width:60px;height:30px;border-radius:3px;border:1px solid var(--border);padding:0 6px;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;color:${row.badgeColor};">${row.badge||'—'}</div>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function readRowEditors(data, editorId) {
+  return data.map((_, i) => {
+    const n = document.getElementById(`re_name_${editorId}_${i}`);
+    if (!n) return null;
+    return {
+      icon:        document.getElementById(`re_icon_${editorId}_${i}`).value,
+      name:        n.value,
+      desc:        document.getElementById(`re_desc_${editorId}_${i}`).value,
+      badge:       document.getElementById(`re_badge_${editorId}_${i}`).value,
+      accentColor: document.getElementById(`re_acc_${editorId}_${i}`).value,
+      badgeColor:  document.getElementById(`re_bcol_${editorId}_${i}`).value,
+      highlight:   document.getElementById(`re_hl_${editorId}_${i}`).value === '1',
+    };
+  }).filter(Boolean);
+}
+
+function addRow(section) {
+  const nr = { icon:'📌', name:'New Item', desc:'Description here', badge:'Neutral', accentColor:'#00e5ff', badgeColor:'#b0bec5', highlight:false };
+  if (section === 'top') { topRows.push(nr); renderRowEditors(topRows,'topRowEditors'); }
+  else { bottomRows.push(nr); renderRowEditors(bottomRows,'bottomRowEditors'); }
+}
+
+function deleteRow(editorId, i) {
+  if (editorId === 'topRowEditors') topRows.splice(i,1);
+  else bottomRows.splice(i,1);
+  renderRowEditors(editorId === 'topRowEditors' ? topRows : bottomRows, editorId);
+  renderRows(topRows,'topRows');
+  renderRows(bottomRows,'bottomRows');
+}
+
+// ══════════════════════════════════════════
+// EDIT TOGGLE
+// ══════════════════════════════════════════
+let editMode = false;
+function toggleEdit() {
+  editMode = !editMode;
+  const btn   = document.getElementById('editBtn');
+  const slide = document.getElementById('slide');
+  const panel = document.getElementById('editPanel');
+  if (editMode) {
+    btn.textContent='✓ DONE'; btn.classList.add('on');
+    slide.classList.add('edit'); panel.classList.add('open');
+    document.getElementById('hint').textContent='Edit fields below → click APPLY CHANGES';
+    document.querySelectorAll('[data-ef]').forEach(el=>el.contentEditable='true');
+    // Sync editors with current live data
+    renderRowEditors(topRows,'topRowEditors');
+    renderRowEditors(bottomRows,'bottomRowEditors');
+  } else {
+    btn.textContent='✏ EDIT MODE'; btn.classList.remove('on');
+    slide.classList.remove('edit'); panel.classList.remove('open');
+    document.getElementById('hint').textContent='';
+    document.querySelectorAll('[data-ef]').forEach(el=>el.contentEditable='false');
+    
+    // Save current state to localStorage
+    saveToLocalStorage();
+  }
+}
+
+// ══════════════════════════════════════════
+// APPLY ALL (edit panel → live slide)
+// ══════════════════════════════════════════
+function applyAll() {
+  // Header
+  document.getElementById('mainTitle').textContent = document.getElementById('in_title').value;
+  document.getElementById('brandThe').textContent  = document.getElementById('in_brandThe').value;
+  document.getElementById('brandMkt').textContent  = document.getElementById('in_brandMkt').value;
+  document.getElementById('brandSnf').textContent  = document.getElementById('in_brandSnf').value;
+  document.getElementById('subtitle1').textContent  = document.getElementById('in_sub').value.split('|')[0]?.trim() || '';
+  document.getElementById('subtitle2').textContent  = document.getElementById('in_sub').value.split('|')[1]?.trim() || '';
+
+  // Top rows
+  topRows = readRowEditors(topRows,'topRowEditors');
+  renderRows(topRows,'topRows');
+  renderRowEditors(topRows,'topRowEditors');
+
+  // Verdict
+  verdict = {
+    icon:        document.getElementById('vd_icon').value,
+    text:        document.getElementById('vd_text').value,
+    bg:          document.getElementById('vd_bg').value,
+    textColor:   document.getElementById('vd_text_col').value,
+    borderColor: document.getElementById('vd_border').value,
+  };
+  renderVerdict();
+
+  // Bottom rows
+  bottomRows = readRowEditors(bottomRows,'bottomRowEditors');
+  renderRows(bottomRows,'bottomRows');
+  renderRowEditors(bottomRows,'bottomRowEditors');
+
+  // Colors
+  applyGlobal();
+
+  // Flash feedback
+  document.querySelectorAll('.analysis-row,.verdict-box').forEach(el=>{
+    el.style.transition='filter .25s';
+    el.style.filter='brightness(1.3)';
+    setTimeout(()=>el.style.filter='',350);
+  });
+  
+  // Save to localStorage after applying changes
+  saveToLocalStorage();
+}
+
+// ══════════════════════════════════════════
+// LOCALSTORAGE FUNCTIONS
+// ══════════════════════════════════════════
+function saveToLocalStorage() {
+  // Collect current data from DOM
+  currentData.mainTitle = document.getElementById('mainTitle').textContent.trim();
+  currentData.brandThe = document.getElementById('brandThe').textContent.trim();
+  currentData.brandMkt = document.getElementById('brandMkt').textContent.trim();
+  currentData.brandSnf = document.getElementById('brandSnf').textContent.trim();
+  const sub1 = document.getElementById('subtitle1').textContent.trim();
+  const sub2 = document.getElementById('subtitle2').textContent.trim();
+  currentData.subtitle = sub1 + (sub2 ? ' | ' + sub2 : '');
+  currentData.topRows = topRows;
+  currentData.bottomRows = bottomRows;
+  currentData.verdict = verdict;
+  
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+  console.log('✓ Saved to localStorage:', currentData);
+}
+
+async function updateFromJSON() {
+  if (editMode) {
+    alert('Please exit edit mode first.');
+    return;
+  }
+  localStorage.removeItem(STORAGE_KEY);
+  console.log('✓ Cleared localStorage, reloading from JSON...');
+  await loadFromJson();
+  document.getElementById('hint').textContent = '✓ Reloaded fresh data from combined.json';
+}
+
+async function initData() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try {
+      const d = JSON.parse(stored);
+      currentData = d;
+      console.log('✓ Loaded from localStorage:', d);
+      
+      // Apply stored data
+      if (d.mainTitle) document.getElementById('mainTitle').textContent = d.mainTitle;
+      if (d.brandThe) document.getElementById('brandThe').textContent = d.brandThe;
+      if (d.brandMkt) document.getElementById('brandMkt').textContent = d.brandMkt;
+      if (d.brandSnf) document.getElementById('brandSnf').textContent = d.brandSnf;
+      if (d.subtitle) {
+        const parts = d.subtitle.split('|');
+        if (parts[0]) document.getElementById('subtitle1').textContent = parts[0].trim();
+        if (parts[1]) document.getElementById('subtitle2').textContent = parts[1].trim();
+      }
+      
+      // Rows & verdict
+      if (Array.isArray(d.topRows)) topRows = d.topRows;
+      if (Array.isArray(d.bottomRows)) bottomRows = d.bottomRows;
+      if (d.verdict) Object.assign(verdict, d.verdict);
+      
+      // Render slide
+      renderSlide();
+      
+      // Populate edit panel
+      populateEditInputs(d);
+      
+      // Apply colors
+      applyGlobal();
+      
+      document.getElementById('hint').textContent = '✓ Loaded from localStorage';
+      
+    } catch (e) {
+      console.error('Error parsing localStorage, loading from JSON:', e);
+      await loadFromJson();
+    }
+  } else {
+    await loadFromJson();
+  }
+}
+
+// ══════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════
+initData();
+</script>
+
+</body>
+</html>

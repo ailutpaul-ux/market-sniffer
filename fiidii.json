@@ -1,0 +1,42 @@
+{
+  "subtitleRow": "Foreign & Domestic Institutional Flows  |  Mar 2026  |  Cash Segment",
+  "derivTitle": "FII DERIVATIVE POSITIONING (Index F&O)",
+  "fiiLabel": "FII Net (06-Mar-2026)",
+  "fiiValue": "-\u20b95966.45 Cr",
+  "fiiSub": "Net Sellers \u2014 Bearish Pressure",
+  "diiLabel": "DII Net (06-Mar-2026)",
+  "diiValue": "\u20b96685.39 Cr",
+  "diiSub": "DII supporting market",
+  "indexShortPct": 85,
+  "indexLongPct": 15,
+  "derivRows": [
+    {
+      "name": "<span class='hl'>FII Index Futures</span>",
+      "total": "Total: -1.62LK",
+      "change": "Change: 1865",
+      "signal": "BEARISH",
+      "signalColor": "red"
+    },
+    {
+      "name": "<span class='hl'>FII Call Options</span>",
+      "total": "Total: -1.23LK",
+      "change": "Change: -43574",
+      "signal": "BEARISH-CALL SHORT/WRITING",
+      "signalColor": "red"
+    },
+    {
+      "name": "<span class='hl'>FII Put Options</span>",
+      "total": "Total: 3.65LK",
+      "change": "Change: 21445",
+      "signal": "BEARISH-PUT LONG",
+      "signalColor": "orange"
+    },
+    {
+      "name": "<span class='hl'>FII Stock Futures</span>",
+      "total": "Total: 11.94LK",
+      "change": "Change: -14672",
+      "signal": "BULLISH",
+      "signalColor": "green"
+    }
+  ]
+}

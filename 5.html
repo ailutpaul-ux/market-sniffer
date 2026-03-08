@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FII / DII Activity</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=JetBrains+Mono:wght@400;600;700&family=Exo+2:wght@400;600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: #07090f;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Barlow', sans-serif;
+    color: #e8eaf6;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ── EDIT BUTTONS ── */
+  .tbtn {
+    background: #00e5ff;
+    color: #000;
+    border: none;
+    padding: 9px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    margin-top: 18px;
+    transition: all 0.2s;
+    position: relative;
+    z-index: 100;
+  }
+  .tbtn-edit { background: #00e5ff; color: #000; }
+  .tbtn-edit:hover { background: #00b8d4; }
+  .tbtn-edit.on { background: #00e676; }
+  .tbtn-json { background: #ffa726; color: #000; margin-left: 10px; }
+  .tbtn-json:hover { background: #ff9800; }
+  .tbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── INLINE EDIT MODE ── */
+  .slide.edit [data-ef] {
+    outline: 1.5px dashed rgba(0,229,255,0.35);
+    cursor: text;
+    border-radius: 2px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+  }
+  .slide.edit [data-ef]:hover {
+    outline-color: rgba(0,229,255,0.7);
+  }
+  .slide.edit [data-ef]:focus {
+    outline: 2px solid rgba(0,229,255,1);
+    background: rgba(0,229,255,0.08);
+  }
+
+  [contenteditable] { outline: none; }
+
+  /* ── SLIDE CONTAINER WITH SPIRAL BINDING ── */
+  .slide-container {
+    position: relative;
+    width: 1050px;
+    margin: 0 auto;
+    padding-top: 0;
+  }
+
+  /* Spiral Binding Loops */
+  .spiral-binding {
+    position: absolute;
+    top: -15px;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .spiral-loop {
+    width: 20px;
+    height: 30px;
+    border: 3px solid;
+    border-color: transparent;
+    border-left-color: #00b8d4;
+    border-right-color: #00e5ff;
+    border-radius: 50%;
+    position: relative;
+    background: linear-gradient(90deg, 
+      rgba(0,184,212,0.3) 0%, 
+      rgba(0,229,255,0.15) 50%, 
+      rgba(0,184,212,0.3) 100%);
+    box-shadow: 
+      inset -2px 0 4px rgba(0,229,255,0.6),
+      inset 2px 0 4px rgba(0,184,212,0.4),
+      0 2px 8px rgba(0,229,255,0.3),
+      0 0 15px rgba(0,229,255,0.2);
+    animation: spiralShine 3s ease-in-out infinite;
+    transform-style: preserve-3d;
+  }
+
+  .spiral-loop:nth-child(even) {
+    animation-delay: 0.15s;
+  }
+
+  .spiral-loop::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 24px;
+    border: 2px solid rgba(0,229,255,0.4);
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 30% 40%, 
+      rgba(255,255,255,0.15) 0%, 
+      transparent 50%);
+  }
+
+  .spiral-loop::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 4px;
+    height: 8px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 50%;
+    filter: blur(1px);
+  }
+
+  @keyframes spiralShine {
+    0%, 100% {
+      box-shadow: 
+        inset -2px 0 4px rgba(0,229,255,0.6),
+        inset 2px 0 4px rgba(0,184,212,0.4),
+        0 2px 8px rgba(0,229,255,0.3),
+        0 0 15px rgba(0,229,255,0.2);
+    }
+    50% {
+      box-shadow: 
+        inset -2px 0 6px rgba(0,229,255,0.8),
+        inset 2px 0 6px rgba(0,184,212,0.6),
+        0 2px 12px rgba(0,229,255,0.5),
+        0 0 20px rgba(0,229,255,0.35);
+    }
+  }
+
+  /* ── SLIDE ── */
+  .slide {
+    width: 1050px;
+    height: 700px;
+    background: #0e1628;
+    border-top: 5px solid #00e5ff;
+    border-bottom: 5px solid #00e5ff;
+    position: relative;
+    overflow: hidden;
+    margin: 20px 0 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(0,229,255,0.15);
+  }
+  .slide::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 70%;
+    background: linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);
+    border-radius: 0 2px 2px 0;
+    z-index: 2;
+  }
+  .slide::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 70%;
+    background: linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);
+    border-radius: 2px 0 0 2px;
+    z-index: 2;
+  }
+
+  /* ── TOP HEADER ── */
+  .top-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    padding: 22px 32px 14px 32px;
+    background: linear-gradient(135deg, #0b1019 0%, #0d1520 40%, #0f1a28 100%);
+    border-bottom: 3px solid #00e5ff;
+    box-shadow: 0 4px 15px rgba(0,229,255,0.2), inset 0 1px 0 rgba(255,255,255,0.03);
+    position: relative;
+  }
+  .top-header::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 70%;
+    background: linear-gradient(180deg, transparent, #00e5ff, transparent);
+    border-radius: 2px;
+  }
+
+  /* Title: "FII /" white, "DII ACTIVITY" cyan */
+  .title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 62px;
+    letter-spacing: 3px;
+    color: #fff;
+    line-height: 1;
+    text-shadow: 0 0 20px rgba(0,229,255,0.3), 0 2px 4px rgba(0,0,0,0.5);
+    background: linear-gradient(180deg, #ffffff 0%, #c8d6e5 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .title .cyan { 
+    color: #00e5ff;
+    text-shadow: 0 0 25px rgba(0,229,255,0.6), 0 2px 4px rgba(0,0,0,0.5);
+    background: none;
+    -webkit-text-fill-color: #00e5ff;
+  }
+
+  .subtitle-row {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #00c8d4;
+    margin-top: 8px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── BRAND top-right ── */
+  .brand {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    padding: 10px 14px;
+    flex-shrink: 0;
+    background: rgba(0,229,255,0.04);
+    border-radius: 4px;
+    border: 1px solid rgba(0,229,255,0.15);
+    box-shadow: 0 0 15px rgba(0,229,255,0.1);
+  }
+  .brand-the {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #00e5ff;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    text-shadow: 0 0 10px rgba(0,229,255,0.6);
+    margin-bottom: 2px;
+  }
+  .brand-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    letter-spacing: 1.5px;
+    line-height: 1.05;
+    white-space: nowrap;
+  }
+  .brand-name .red   { color: #ff6b6b; text-shadow: 0 0 8px rgba(255,107,107,0.4); }
+  .brand-name .white { color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
+  .brand-line {
+    width: 100%;
+    height: 2px;
+    background: #00e5ff;
+    margin-top: 4px;
+  }
+
+  /* ── NET FLOW CARDS ── */
+  .flow-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 0;
+    margin: 30px 28px;
+    border: 1px solid #1a2a3a;
+  }
+
+  .flow-card {
+    background: #0f1828;
+    padding: 16px 20px 16px;
+    position: relative;
+    border-bottom: 1px solid #1a2a3a;
+  }
+  /* Red left accent for FII */
+  .flow-card.fii { border-left: 5px solid #ff3d57; border-right: 1px solid #1a2a3a; }
+  /* Yellow left accent for DII */
+  .flow-card.dii { border-left: 5px solid #ffd600; }
+  /* Green left accent for % Long */
+  .flow-card.long { border-left: 5px solid #00e676; border-right: 1px solid #1a2a3a; }
+  /* Orange left accent for % Short */
+  .flow-card.short { border-left: 5px solid #ff9100; }
+  /* Remove border-bottom from last row */
+  .flow-card:nth-child(3),
+  .flow-card:nth-child(4) { border-bottom: none; }
+
+  .flow-card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #607d8b;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+  }
+
+  .flow-card-value {
+    font-family: 'Anton', sans-serif;
+    font-size: 48px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .flow-card.fii .flow-card-value { color: #ff3d57; }
+  .flow-card.dii .flow-card-value { color: #ffd600; }
+  .flow-card.long .flow-card-value { color: #00e676; }
+  .flow-card.short .flow-card-value { color: #ff9100; }
+
+  .flow-card-sub {
+    font-family: 'Barlow', sans-serif;
+    font-size: 11px;
+    color: #334455;
+    margin-top: 10px;
+    letter-spacing: 0.3px;
+  }
+
+  /* ── SPACER (empty dark area between cards and table) ── */
+  .mid-spacer {
+    height: 180px;
+    background: #0b0f1a;
+  }
+
+  /* ── FII DERIVATIVE TABLE ── */
+  .deriv-section {
+    margin: -200px 28px 28px 28px;
+    border: 1px solid #1a2a3a;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .deriv-header {
+    background: #111f32;
+    padding: 13px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #00e5ff;
+    letter-spacing: 2px;
+    text-align: center;
+    border-bottom: 1px solid #1a2a3a;
+  }
+
+  .deriv-row {
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr 260px;
+    align-items: center;
+    padding: 12px 20px;
+    border-bottom: 1px solid #0f1825;
+    transition: filter .12s;
+  }
+  .deriv-row:last-child { border-bottom: none; }
+  .deriv-row:nth-child(odd)  { background: #0d1622; }
+  .deriv-row:nth-child(even) { background: #0b1018; }
+  .deriv-row:hover { filter: brightness(1.1); }
+
+  .deriv-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: #7a9ab0;
+    letter-spacing: 0.5px;
+  }
+  /* "Index" / "Call" etc. highlighted in cyan */
+  .deriv-name .hl { color: #00e5ff; }
+
+  .deriv-total {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    color: #da8ee7;
+    letter-spacing: 0.3px;
+  }
+
+  .deriv-change {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    letter-spacing: 0.3px;
+  }
+  .deriv-change.positive { color: #00e676; }
+  .deriv-change.negative { color: #ff3d57; }
+
+  .deriv-signal {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 15px;
+    font-weight: 700;
+    text-align: right;
+    letter-spacing: 0.5px;
+  }
+
+  /* Signal color classes */
+  .sig-red    { color: #ff3d57; }
+  .sig-green  { color: #00e676; }
+  .sig-yellow { color: #ffd600; }
+  .sig-cyan   { color: #00e5ff; }
+  .sig-orange { color: #ff9100; }
+  .sig-dim    { color: #546e7a; }
+
+  /* ── ERROR BANNER ── */
+  .error-banner {
+    display: none;
+    width: 1050px;
+    margin-bottom: 12px;
+    background: #2a060e;
+    border: 1px solid #ff3d57;
+    color: #ff3d57;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 10px 16px;
+    border-radius: 4px;
+  }
+
+  /* ── HEADER BANNER ── */
+  .header-banner {
+    width: 100%;
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
+    border-bottom: 3px solid #00e5ff;
+    box-shadow: 0 4px 20px rgba(0,229,255,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+  }
+  .header-content {
+    max-width: 1050px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    padding: 0 15px;
+    position: relative;
+  }
+  .header-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(180deg, transparent, #00e5ff, transparent);
+    border-radius: 2px;
+  }
+  .header-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hb-top {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #00e5ff;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0,229,255,0.5);
+    text-align: right;
+  }
+  .hb-name {
+    font-family: 'Bebas Neue', Arial, sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .hb-market { 
+    color: #ff6b6b;
+    text-shadow: 0 0 8px rgba(255,107,107,0.4);
+  }
+  .hb-sniffer { 
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.3);
+  }
+
+  /* ── SITE NAV ── */
+  .site-nav-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; flex-wrap: wrap; row-gap: 6px;
+  }
+  .snb-links { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .snb-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 11px; border-radius: 5px; text-decoration: none;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    color: #ffffff; 
+    background: linear-gradient(135deg, rgba(15,25,35,0.8) 0%, rgba(20,30,40,0.5) 100%);
+    border: 1px solid rgba(0,229,255,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3);
+    transition: all .25s ease; white-space: nowrap;
+    position: relative;
+    transform: perspective(100px) translateZ(0);
+  }
+  .snb-link:hover { 
+    color: #b8d4e0; 
+    background: linear-gradient(135deg, rgba(0,229,255,0.12) 0%, rgba(0,229,255,0.06) 100%);
+    border-color: rgba(0,229,255,0.4);
+    box-shadow: 0 4px 8px rgba(0,229,255,0.15), 0 0 16px rgba(0,229,255,0.2), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.2);
+    transform: perspective(100px) translateZ(4px);
+  }
+  .snb-link.snb-active { 
+    color: #00e5ff; 
+    background: linear-gradient(135deg, rgba(0,229,255,0.2) 0%, rgba(0,229,255,0.12) 100%);
+    border-color: rgba(0,229,255,0.6);
+    box-shadow: 0 6px 12px rgba(0,229,255,0.25), 0 0 24px rgba(0,229,255,0.35), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.15);
+    text-shadow: 0 0 10px rgba(0,229,255,0.5), 0 1px 2px rgba(0,0,0,0.5);
+    transform: perspective(100px) translateZ(6px);
+  }
+  .snb-link .snb-num { font-size: 9px; opacity: .6; font-weight: 400; }
+  .snb-sep { width: 1px; height: 20px; background: #0d1f30; margin: 0 6px; flex-shrink: 0; }
+  .snb-arrows { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
+  .snb-arrow {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 4px;
+    border: 1.5px solid #00c8c8; background: rgba(0,200,200,0.08);
+    color: #00e5e5; text-decoration: none; font-size: 16px;
+    transition: background .2s, box-shadow .2s;
+  }
+  .snb-arrow:hover { background: rgba(0,200,200,0.22); box-shadow: 0 0 20px rgba(0,200,200,0.25); }
+  .snb-arrow.snb-disabled { opacity: 0.25; pointer-events: none; }
+  .snb-count { font-family: 'Share Tech Mono','JetBrains Mono',monospace; font-size: 13px; color: #445566; letter-spacing: 2px; min-width: 60px; text-align: center; }
+  .snb-count span { color: #00c8c8; font-weight: 700; }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 13px;
+    color: #FFA726;
+    font-family: 'Exo 2', sans-serif;
+    letter-spacing: 0.3px;
+    z-index: 10;
+  }
+</style>
+</head>
+<body>
+
+<div class="header-banner">
+  <div class="header-content">
+    <div class="header-brand">
+      <div class="hb-top">T H E</div>
+      <div class="hb-name"><span class="hb-market">MARKET</span> <span class="hb-sniffer">SNIFFER</span></div>
+    </div>
+    <div class="site-nav-bar">
+      <a class="snb-arrow" href="2.html">&#8592;</a>
+      <div class="snb-links">
+        <a class="snb-link" href="1.html"><span class="snb-num">1.</span>NIFTY 50</a>
+        <a class="snb-link" href="2.html"><span class="snb-num">2.</span>SECTORS</a>
+        <a class="snb-link snb-active" href="5.html"><span class="snb-num">3.</span>FII/DII</a>
+        <a class="snb-link" href="3.html"><span class="snb-num">4.</span>OI</a>
+        <a class="snb-link" href="4.html"><span class="snb-num">5.</span>PCR</a>
+        <a class="snb-link" href="8.html"><span class="snb-num">6.</span>S&R</a>
+        <a class="snb-link" href="6.html"><span class="snb-num">7.</span>LB/SB</a>
+        <a class="snb-link" href="7.html"><span class="snb-num">8.</span>COMBINED</a>
+      </div>
+      <a class="snb-arrow" href="3.html">&#8594;</a>
+    </div>
+  </div>
+</div>
+
+<div class="error-banner" id="errorBanner"></div>
+
+  <div class="slide-container">
+    <div class="spiral-binding">
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+      <div class="spiral-loop"></div>
+    </div>
+    <div class="slide" id="slide">
+
+  <!-- TOP HEADER -->
+  <div class="top-header">
+    <div>
+      <div class="title">FII / DII ACTIVITY</div>
+      <div class="subtitle-row" id="subtitleRow" contenteditable="false" data-ef>
+        Foreign &amp; Domestic Institutional Flows &nbsp;|&nbsp; Feb 2026 &nbsp;|&nbsp; Cash Segment
+      </div>
+    </div>
+    <div class="brand">
+      <div class="brand-the">T H E</div>
+      <div class="brand-name">
+        <span class="red">MARKET&nbsp;</span><span class="white">SNIFFER</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- NET FLOW CARDS -->
+  <div class="flow-cards">
+    <div class="flow-card fii" id="fiiCard">
+      <div class="flow-card-label" id="fiiLabel" contenteditable="false" data-ef>FII Net (19 Feb)</div>
+      <div class="flow-card-value" id="fiiValue" contenteditable="false" data-ef>-&#8377;880 Cr</div>
+      <div class="flow-card-sub"   id="fiiSub" contenteditable="false" data-ef>Net Sellers — Bearish Pressure</div>
+    </div>
+    <div class="flow-card dii" id="diiCard">
+      <div class="flow-card-label" id="diiLabel" contenteditable="false" data-ef>DII Net (19 Feb)</div>
+      <div class="flow-card-value" id="diiValue" contenteditable="false" data-ef>-&#8377;596 Cr</div>
+      <div class="flow-card-sub"   id="diiSub" contenteditable="false" data-ef>DII also net sellers — caution</div>
+    </div>
+    <div class="flow-card long" id="longCard">
+      <div class="flow-card-label" id="longLabel" contenteditable="false" data-ef>% Long</div>
+      <div class="flow-card-value" id="longValue" contenteditable="false" data-ef>16%</div>
+      <div class="flow-card-sub"   id="longSub" contenteditable="false" data-ef>Long Positions</div>
+    </div>
+    <div class="flow-card short" id="shortCard">
+      <div class="flow-card-label" id="shortLabel" contenteditable="false" data-ef>% Short</div>
+      <div class="flow-card-value" id="shortValue" contenteditable="false" data-ef>84%</div>
+      <div class="flow-card-sub"   id="shortSub" contenteditable="false" data-ef>Short Positions</div>
+    </div>
+  </div>
+
+  <!-- SPACER — empty dark area matching the slide -->
+  <div class="mid-spacer"></div>
+
+  <!-- FII DERIVATIVE POSITIONING TABLE -->
+  <div class="deriv-section">
+    <div class="deriv-header" id="derivTitle" contenteditable="false" data-ef>FII DERIVATIVE POSITIONING (Index F&amp;O)</div>
+    <div id="derivRows"></div>
+  </div>
+
+  <div class="disclaimer">For educational purposes only. Not SEBI registered advice. Consult a certified financial advisor before trading.</div>
+</div><!-- /slide -->
+
+</div><!-- /slide-container -->
+
+<!-- BUTTONS OUTSIDE SLIDE -->
+<div style="display:flex;gap:10px;margin-bottom:20px;">
+  <button class="tbtn tbtn-edit" id="editBtn" onclick="toggleEdit()">✏ EDIT MODE</button>
+  <button class="tbtn tbtn-json" id="jsonBtn" onclick="updateFromJSON()">🔄 UPDATE FROM JSON</button>
+</div>
+
+<script>
+  // Map signalColor string → CSS class
+  const sigClass = c => ({
+    red:    'sig-red',
+    green:  'sig-green',
+    yellow: 'sig-yellow',
+    cyan:   'sig-cyan',
+    orange: 'sig-orange',
+    dim:    'sig-dim'
+  }[c] || 'sig-dim');
+
+  // Get color class for change value
+  function getChangeClass(changeStr) {
+    const match = changeStr.match(/Change:\s*([+-]?\d+)/);
+    if (!match) return '';
+    const value = parseInt(match[1]);
+    return value >= 0 ? 'positive' : 'negative';
+  }
+
+  // Auto-colour FII card: red if negative, green if positive
+  function applyFiiColor(value) {
+    const isNeg = String(value).startsWith('-');
+    const card  = document.getElementById('fiiCard');
+    const val   = document.getElementById('fiiValue');
+    val.style.color              = isNeg ? '#ff3d57' : '#00e676';
+    card.style.borderLeftColor   = isNeg ? '#ff3d57' : '#00e676';
+  }
+
+  // Auto-colour DII card: yellow(caution) if negative, green if positive
+  function applyDiiColor(value) {
+    const isNeg = String(value).startsWith('-');
+    const card  = document.getElementById('diiCard');
+    const val   = document.getElementById('diiValue');
+    val.style.color              = isNeg ? '#ffd600' : '#00e676';
+    card.style.borderLeftColor   = isNeg ? '#ffd600' : '#00e676';
+  }
+
+  // Render derivative rows
+  function renderDerivRows(rows) {
+    document.getElementById('derivRows').innerHTML = rows.map((r, i) => `
+      <div class="deriv-row">
+        <div class="deriv-name" id="deriv-${i}-name" contenteditable="false" data-ef>${r.name}</div>
+        <div class="deriv-total" id="deriv-${i}-total" contenteditable="false" data-ef>${r.total}</div>
+        <div class="deriv-change ${getChangeClass(r.change)}" id="deriv-${i}-change" contenteditable="false" data-ef>${r.change}</div>
+        <div class="deriv-signal ${sigClass(r.signalColor)}" id="deriv-${i}-signal" contenteditable="false" data-ef data-color="${r.signalColor}">${r.signal}</div>
+      </div>`).join('');
+  }
+
+  // ────────────────────────────────────────────────────────────────────────
+  // EDIT MODE & LOCALSTORAGE
+  // ────────────────────────────────────────────────────────────────────────
+  const STORAGE_KEY = 'page5_edited_data';
+  let editMode = false;
+  let currentData = {};
+
+  function toggleEdit() {
+    const slide = document.getElementById('slide');
+    const btn = document.getElementById('editBtn');
+    const editable = slide.querySelectorAll('[data-ef]');
+
+    editMode = !editMode;
+
+    if (editMode) {
+      // Enter edit mode
+      slide.classList.add('edit');
+      btn.classList.add('on');
+      btn.textContent = '💾 SAVE EDITS';
+      editable.forEach(el => el.contentEditable = 'true');
+    } else {
+      // Save and exit edit mode
+      slide.classList.remove('edit');
+      btn.classList.remove('on');
+      btn.textContent = '✏ EDIT MODE';
+      editable.forEach(el => el.contentEditable = 'false');
+
+      // Collect edited data
+      currentData.subtitleRow = document.getElementById('subtitleRow').textContent.trim();
+      currentData.derivTitle = document.getElementById('derivTitle').textContent.trim();
+
+      currentData.fiiLabel = document.getElementById('fiiLabel').textContent.trim();
+      currentData.fiiValue = document.getElementById('fiiValue').textContent.trim();
+      currentData.fiiSub = document.getElementById('fiiSub').textContent.trim();
+
+      currentData.diiLabel = document.getElementById('diiLabel').textContent.trim();
+      currentData.diiValue = document.getElementById('diiValue').textContent.trim();
+      currentData.diiSub = document.getElementById('diiSub').textContent.trim();
+
+      currentData.longLabel = document.getElementById('longLabel').textContent.trim();
+      currentData.longValue = document.getElementById('longValue').textContent.trim();
+      currentData.longSub = document.getElementById('longSub').textContent.trim();
+
+      currentData.shortLabel = document.getElementById('shortLabel').textContent.trim();
+      currentData.shortValue = document.getElementById('shortValue').textContent.trim();
+      currentData.shortSub = document.getElementById('shortSub').textContent.trim();
+
+      // Collect derivative rows data
+      currentData.derivRows = [];
+      for (let i = 0; i < 4; i++) {
+        const nameEl = document.getElementById(`deriv-${i}-name`);
+        const totalEl = document.getElementById(`deriv-${i}-total`);
+        const changeEl = document.getElementById(`deriv-${i}-change`);
+        const signalEl = document.getElementById(`deriv-${i}-signal`);
+        if (nameEl && totalEl && changeEl && signalEl) {
+          currentData.derivRows.push({
+            name: nameEl.innerHTML.trim(),
+            total: totalEl.textContent.trim(),
+            change: changeEl.textContent.trim(),
+            signal: signalEl.textContent.trim(),
+            signalColor: signalEl.getAttribute('data-color') || 'green'
+          });
+        }
+      }
+
+      // Save to localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+      console.log('✓ Saved to localStorage:', currentData);
+
+      // Reapply border colors based on saved values
+      applyFiiColor(currentData.fiiValue);
+      applyDiiColor(currentData.diiValue);
+    }
+  }
+
+  // Update from JSON and clear localStorage
+  async function updateFromJSON() {
+    if (editMode) {
+      alert('Please exit edit mode first (save or cancel).');
+      return;
+    }
+    localStorage.removeItem(STORAGE_KEY);
+    console.log('✓ Cleared localStorage, reloading from JSON...');
+    await loadData();
+  }
+
+  // Load JSON data
+  async function loadData() {
+    try {
+      const res = await fetch('fiidii.json');
+      if (!res.ok) throw new Error(`fiidii.json not found (HTTP ${res.status})`);
+      const d = await res.json();
+
+      currentData = { ...d };
+
+      // Subtitle
+      if (d.subtitleRow) document.getElementById('subtitleRow').textContent = d.subtitleRow;
+      if (d.derivTitle)  document.getElementById('derivTitle').textContent  = d.derivTitle;
+
+      // FII card
+      if (d.fiiLabel) document.getElementById('fiiLabel').textContent = d.fiiLabel;
+      if (d.fiiValue) {
+        document.getElementById('fiiValue').textContent = d.fiiValue;
+        applyFiiColor(d.fiiValue);
+      }
+      if (d.fiiSub) document.getElementById('fiiSub').textContent = d.fiiSub;
+
+      // DII card
+      if (d.diiLabel) document.getElementById('diiLabel').textContent = d.diiLabel;
+      if (d.diiValue) {
+        document.getElementById('diiValue').textContent = d.diiValue;
+        applyDiiColor(d.diiValue);
+      }
+      if (d.diiSub) document.getElementById('diiSub').textContent = d.diiSub;
+
+      // % Long card
+      if (d.longLabel) document.getElementById('longLabel').textContent = d.longLabel;
+      if (d.indexLongPct !== undefined) document.getElementById('longValue').textContent = d.indexLongPct + '%';
+      if (d.longSub) document.getElementById('longSub').textContent = d.longSub;
+
+      // % Short card
+      if (d.shortLabel) document.getElementById('shortLabel').textContent = d.shortLabel;
+      if (d.indexShortPct !== undefined) document.getElementById('shortValue').textContent = d.indexShortPct + '%';
+      if (d.shortSub) document.getElementById('shortSub').textContent = d.shortSub;
+
+      // Deriv table
+      if (Array.isArray(d.derivRows)) renderDerivRows(d.derivRows);
+
+    } catch (err) {
+      const b = document.getElementById('errorBanner');
+      b.style.display = 'block';
+      b.textContent = '⚠ ' + err.message + ' — Place fiidii.json in the same folder and serve via local server (not file://).';
+      console.error(err);
+    }
+  }
+
+  // Initialize: check localStorage first, then JSON
+  async function initData() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const d = JSON.parse(stored);
+        currentData = d;
+        console.log('✓ Loaded from localStorage:', d);
+
+        // Apply stored data
+        if (d.subtitleRow) document.getElementById('subtitleRow').textContent = d.subtitleRow;
+        if (d.derivTitle) document.getElementById('derivTitle').textContent = d.derivTitle;
+
+        if (d.fiiLabel) document.getElementById('fiiLabel').textContent = d.fiiLabel;
+        if (d.fiiValue) {
+          document.getElementById('fiiValue').textContent = d.fiiValue;
+          applyFiiColor(d.fiiValue);
+        }
+        if (d.fiiSub) document.getElementById('fiiSub').textContent = d.fiiSub;
+
+        if (d.diiLabel) document.getElementById('diiLabel').textContent = d.diiLabel;
+        if (d.diiValue) {
+          document.getElementById('diiValue').textContent = d.diiValue;
+          applyDiiColor(d.diiValue);
+        }
+        if (d.diiSub) document.getElementById('diiSub').textContent = d.diiSub;
+
+        if (d.longLabel) document.getElementById('longLabel').textContent = d.longLabel;
+        if (d.longValue) document.getElementById('longValue').textContent = d.longValue;
+        if (d.longSub) document.getElementById('longSub').textContent = d.longSub;
+
+        if (d.shortLabel) document.getElementById('shortLabel').textContent = d.shortLabel;
+        if (d.shortValue) document.getElementById('shortValue').textContent = d.shortValue;
+        if (d.shortSub) document.getElementById('shortSub').textContent = d.shortSub;
+
+        // Derivative table
+        if (Array.isArray(d.derivRows) && d.derivRows.length > 0) {
+          renderDerivRows(d.derivRows);
+        } else {
+          // Fallback: load from JSON if not in localStorage
+          const res = await fetch('fiidii.json');
+          if (res.ok) {
+            const json = await res.json();
+            if (Array.isArray(json.derivRows)) renderDerivRows(json.derivRows);
+          }
+        }
+
+      } catch (e) {
+        console.error('Error parsing localStorage, loading from JSON:', e);
+        await loadData();
+      }
+    } else {
+      await loadData();
+    }
+  }
+
+  initData();
+</script>
+
+</body>
+</html>

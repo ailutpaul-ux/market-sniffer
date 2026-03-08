@@ -1,0 +1,94 @@
+{
+  "mainTitle": "OI BUILD-UP ANALYSIS",
+  "subtitle": "NIFTY 50 \u2014 Open Interest Build-up Activity | Long Buildup | Short Buildup",
+  "lbArrow": "\u25b2",
+  "lbTitle": "LONG BUILDUP",
+  "lbSub": "Price \u2191 OI \u2191 \u2014 Fresh Buying",
+  "sbArrow": "\u25bc",
+  "sbTitle": "SHORT BUILDUP",
+  "sbSub": "Price \u2193 OI \u2191 \u2014 Fresh Selling",
+  "lb": [
+    {
+      "name": "MAZDOCK",
+      "oi": "2,471",
+      "price": "+5.08%",
+      "oiChg": "+35.68%",
+      "mult": "2.5x"
+    },
+    {
+      "name": "UNITDSPR",
+      "oi": "1,389",
+      "price": "+4.83%",
+      "oiChg": "+25.42%",
+      "mult": "3.0x"
+    },
+    {
+      "name": "SOLARINDS",
+      "oi": "15,152",
+      "price": "+3.28%",
+      "oiChg": "+12.7%",
+      "mult": "1.1x"
+    },
+    {
+      "name": "ASTRAL",
+      "oi": "1,689",
+      "price": "+1.57%",
+      "oiChg": "+10.68%",
+      "mult": "1.6x"
+    },
+    {
+      "name": "OIL",
+      "oi": "484",
+      "price": "+1.13%",
+      "oiChg": "+8.0%",
+      "mult": "0.6x"
+    }
+  ],
+  "sb": [
+    {
+      "name": "ICICIBANK",
+      "oi": "1,313",
+      "price": "-3.26%",
+      "oiChg": "+17.37%",
+      "mult": "1.2x"
+    },
+    {
+      "name": "TATAELXSI",
+      "oi": "4,330",
+      "price": "-1.59%",
+      "oiChg": "+16.31%",
+      "mult": "1.0x"
+    },
+    {
+      "name": "POLICYBZR",
+      "oi": "1,428",
+      "price": "-3.01%",
+      "oiChg": "+15.22%",
+      "mult": "1.2x"
+    },
+    {
+      "name": "ASHOKLEY",
+      "oi": "194",
+      "price": "-4.12%",
+      "oiChg": "+12.26%",
+      "mult": "1.2x"
+    },
+    {
+      "name": "ANGELONE",
+      "oi": "219",
+      "price": "-2.28%",
+      "oiChg": "+10.24%",
+      "mult": "1.4x"
+    }
+  ],
+  "legend": [
+    {
+      "label": "Long Buildup \u2014 BULLISH (Fresh longs being added)",
+      "color": "#00e676"
+    },
+    {
+      "label": "Short Buildup \u2014 BEARISH (Fresh shorts being added)",
+      "color": "#ff3d57"
+    }
+  ]
+}

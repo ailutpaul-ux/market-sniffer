@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nifty 50 Market Analysis - Page 1</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=Rajdhani:wght@600;700&family=Share+Tech+Mono&family=Exo+2:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #05080f;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Share Tech Mono', monospace;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* ── SLIDE CONTAINER WITH SPIRAL BINDING ── */
+  .slide-container {
+    position: relative;
+    width: 1050px;
+    margin: 0 auto;
+    padding-top: 0;
+  }
+
+  /* Spiral Binding Loops */
+  .spiral-binding {
+    position: absolute;
+    top: -15px;
+    left: 0;
+    width: 100%;
+    height: 30px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    z-index: 100;
+    pointer-events: none;
+  }
+
+  .spiral-loop {
+    width: 20px;
+    height: 30px;
+    border: 3px solid;
+    border-color: transparent;
+    border-left-color: #00b8d4;
+    border-right-color: #00e5ff;
+    border-radius: 50%;
+    position: relative;
+    background: linear-gradient(90deg, 
+      rgba(0,184,212,0.3) 0%, 
+      rgba(0,229,255,0.15) 50%, 
+      rgba(0,184,212,0.3) 100%);
+    box-shadow: 
+      inset -2px 0 4px rgba(0,229,255,0.6),
+      inset 2px 0 4px rgba(0,184,212,0.4),
+      0 2px 8px rgba(0,229,255,0.3),
+      0 0 15px rgba(0,229,255,0.2);
+    animation: spiralShine 3s ease-in-out infinite;
+    transform-style: preserve-3d;
+  }
+
+  .spiral-loop:nth-child(even) {
+    animation-delay: 0.15s;
+  }
+
+  .spiral-loop::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 14px;
+    height: 24px;
+    border: 2px solid rgba(0,229,255,0.4);
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 30% 40%, 
+      rgba(255,255,255,0.15) 0%, 
+      transparent 50%);
+  }
+
+  .spiral-loop::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 4px;
+    height: 8px;
+    background: rgba(255,255,255,0.5);
+    border-radius: 50%;
+    filter: blur(1px);
+  }
+
+  @keyframes spiralShine {
+    0%, 100% {
+      box-shadow: 
+        inset -2px 0 4px rgba(0,229,255,0.6),
+        inset 2px 0 4px rgba(0,184,212,0.4),
+        0 2px 8px rgba(0,229,255,0.3),
+        0 0 15px rgba(0,229,255,0.2);
+    }
+    50% {
+      box-shadow: 
+        inset -2px 0 6px rgba(0,229,255,0.8),
+        inset 2px 0 6px rgba(0,184,212,0.6),
+        0 2px 12px rgba(0,229,255,0.5),
+        0 0 20px rgba(0,229,255,0.35);
+    }
+  }
+
+  /* ── SLIDE ── */
+  .slide {
+    width: 1050px;
+    height: 700px;
+    background: #0e1628;
+    border-top: 5px solid #00e5ff;
+    border-bottom: 5px solid #00e5ff;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 38px 50px 28px 50px;
+    margin: 20px 0 0;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4), 0 0 20px rgba(0,229,255,0.15);
+  }
+  .slide::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 70%;
+    background: linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);
+    border-radius: 0 2px 2px 0;
+    z-index: 2;
+  }
+  .slide::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 70%;
+    background: linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);
+    border-radius: 2px 0 0 2px;
+    z-index: 2;
+  }
+
+  /* ── TEAL BG CIRCLE top-right ── */
+  .corner-circle {
+    position: absolute;
+    top: -72px;
+    right: -72px;
+    width: 290px;
+    height: 290px;
+    background: #0F6F75;
+    border-radius: 50%;
+    z-index: 0;
+  }
+
+  /* ── LOGO CIRCLE ── */
+  .logo-circle {
+    position: absolute;
+    top: 30px;
+    right: 62px;
+    width: 250px;
+    height: 250px;
+    background: #040910;
+    border: 3px solid #00dddd;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    text-align: center;
+    padding: 10px;
+  }
+  .logo-the {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 11px;
+    font-weight: 600;
+    color: #00dddd;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-bottom: 1px;
+  }
+  .logo-market {
+    font-family: 'Arial Black', sans-serif;
+    font-size: 35px;
+    color: #e53e3e;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .logo-sniffer {
+    font-family: 'Arial Black', sans-serif;
+    font-size: 35px;
+    color: #ffffff;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .logo-divider {
+    width: 72%;
+    height: 1.5px;
+    background: #00dddd;
+    margin: 6px 0 5px;
+  }
+  .logo-yt-row {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .logo-yt-play { color: #00dddd; font-size: 9px; }
+  .logo-yt { font-family: 'Exo 2', sans-serif; font-size: 9px; color: #999; letter-spacing: 0.5px; }
+  .logo-telescope { font-size: 22px; margin-top: 5px; }
+
+  /* ── MAIN TITLE ── */
+  .main-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 112px;
+    color: #ffffff;
+    line-height: 0.92;
+    z-index: 1;
+    letter-spacing: 3px;
+    max-width: 740px;
+    text-shadow: 0 0 25px rgba(0,229,255,0.4), 0 3px 6px rgba(0,0,0,0.6);
+    background: linear-gradient(180deg, #ffffff 0%, #c8d6e5 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  /* ── SUBTITLE ── */
+  .subtitle {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 48px;
+    color: #00e5ff;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    z-index: 1;
+    margin-top: 2px;
+    max-width: 700px;
+    text-shadow: 0 0 20px rgba(0,229,255,0.6), 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  /* ── CYAN LINE ── */
+  .divider {
+    height: 3px;
+    background: #00e5ff;
+    width: 650px;
+    margin: 9px 0 10px 0;
+    z-index: 1;
+    box-shadow: 0 0 10px rgba(0,229,255,0.5);
+  }
+
+  /* ── META ROW ── */
+  .meta-row {
+    display: flex;
+    align-items: center;
+    z-index: 1;
+    font-size: 13px;
+    color: #6a7f90;
+    letter-spacing: 0.5px;
+    font-family: 'Share Tech Mono', monospace;
+    gap: 0;
+  }
+  .meta-cal  { font-size: 13px; margin-right: 7px; }
+  .meta-date { color: #00e5ff; font-weight: 700; font-size: 13px; margin-right: 8px; text-shadow: 0 0 8px rgba(0,229,255,0.4); }
+  .meta-sep  { color: #2a3a4a; margin: 0 8px; font-size: 14px; }
+  .meta-tag  { color: #6a7f90; font-size: 15px; }
+
+  /* ── CLOSE ROW ── */
+  .close-row {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 27px;
+    color: #8899aa;
+    letter-spacing: 2px;
+    z-index: 1;
+    margin-top: 14px;
+    display: flex;
+    align-items: baseline;
+    flex-wrap: nowrap;
+  }
+  .close-label { color: #8899aa; font-size: 27px; letter-spacing: 1px; }
+  .close-num   { color: #00e84c; font-size: 34px; font-weight: 700; }
+  .close-change{ font-size: 32px; font-weight: 700; }
+  .future-change{ font-size: 22px; font-weight: 700; margin-left: -8px; }
+  .trend-row { margin-top: 30px; }
+  .trend-label { color: #8899aa; font-size: 27px; letter-spacing: 1px; font-family: 'Exo 2', sans-serif; }
+  .trend-num   { color: #00e5ff; font-size: 26px; font-weight: 600; font-family: 'Rajdhani', sans-serif; }
+
+  /* ── STATS ROW ── */
+  .stats-row {
+    display: flex;
+    margin-top: auto;
+    z-index: 1;
+    background: #0d1826;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 60px;
+  }
+
+  .stat-card {
+    flex: 1;
+    padding: 18px 28px 30px;
+    position: relative;
+  }
+
+  .stat-card:nth-child(1) { border-left: 4px solid #00e84c; }
+  .stat-card:nth-child(2) { border-left: 4px solid #c084fc; }
+  .stat-card:nth-child(3) { border-left: 4px solid #d4a800; }
+  .stat-card:nth-child(4) { border-left: 4px solid #00c8d4; }
+
+  .stat-card:nth-child(2)::before,
+  .stat-card:nth-child(3)::before,
+  .stat-card:nth-child(4)::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 10%; height: 80%;
+    width: 1px;
+    background: rgba(255,255,255,0.06);
+  }
+
+  .stat-label {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 15px;
+    color: #FFFFFF;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .stat-value {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    line-height: 1;
+  }
+
+  .val-green  { color: #00e84c; }
+  .val-purple { color: #c084fc; }
+  .val-yellow { color: #f5c518; }
+  .val-cyan   { color: #00c8d4; }
+
+  /* ── EDIT BUTTON ── */
+  .tbtn {
+    background: var(--accent-cyan);
+    color: #000;
+    border: none;
+    padding: 9px 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 4px;
+    letter-spacing: 1px;
+    margin-top: 18px;
+    transition: all 0.2s;
+    position: relative;
+    z-index: 100;
+  }
+  .tbtn-edit { background: #00e5ff; color: #000; }
+  .tbtn-edit:hover { background: #00b8d4; }
+  .tbtn-edit.on { background: #00e676; }
+  .tbtn-json { background: #ffa726; color: #000; margin-left: 10px; }
+  .tbtn-json:hover { background: #ff9800; }
+  .tbtn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ── INLINE EDIT MODE ── */
+  .slide.edit [data-ef] {
+    outline: 1.5px dashed rgba(0,229,255,0.35);
+    cursor: text;
+    border-radius: 2px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+  }
+  .slide.edit [data-ef]:hover {
+    outline-color: #00e5ff;
+    background: rgba(0,229,255,0.03);
+  }
+  .slide.edit [data-ef]:focus {
+    outline: 2px solid #00e5ff;
+    background: rgba(0,229,255,0.06);
+  }
+  [contenteditable] { outline: none; }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 13px;
+    color: #FFA726;
+    font-family: 'Exo 2', sans-serif;
+    letter-spacing: 0.3px;
+    z-index: 10;
+  }
+
+  .error-msg {
+    position: absolute;
+    bottom: 26px; left: 50px;
+    color: #ff5555; font-size: 12px;
+    font-family: monospace; z-index: 99; display: none;
+  }
+
+  
+
+  /* ── HEADER BANNER ── */
+  .header-banner {
+    width: 100%;
+    background: linear-gradient(135deg, #0d1b2a 0%, #1b263b 50%, #0d1b2a 100%);
+    border-bottom: 3px solid #00e5ff;
+    box-shadow: 0 4px 20px rgba(0,229,255,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+    padding: 16px 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+  }
+  .header-content {
+    max-width: 1050px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 30px;
+    padding: 0 15px;
+    position: relative;
+  }
+  .header-content::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background: linear-gradient(180deg, transparent, #00e5ff, transparent);
+    border-radius: 2px;
+  }
+  .header-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .hb-top {
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    letter-spacing: 4px;
+    color: #00e5ff;
+    font-weight: 700;
+    text-shadow: 0 0 10px rgba(0,229,255,0.5);
+    text-align: right;
+  }
+  .hb-name {
+    font-family: 'Bebas Neue', Arial, sans-serif;
+    font-size: 24px;
+    letter-spacing: 2px;
+    line-height: 1;
+  }
+  .hb-market { 
+    color: #ff6b6b;
+    text-shadow: 0 0 8px rgba(255,107,107,0.4);
+  }
+  .hb-sniffer { 
+    color: #ffffff;
+    text-shadow: 0 0 8px rgba(255,255,255,0.3);
+  }
+
+  /* ── SITE NAV ── */
+  .site-nav-bar {
+    display: flex; align-items: center; justify-content: center;
+    gap: 12px; flex-wrap: wrap; row-gap: 6px;
+  }
+  .snb-links { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .snb-link {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 6px 11px; border-radius: 5px; text-decoration: none;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+    color: #ffffff; 
+    background: linear-gradient(135deg, rgba(15,25,35,0.8) 0%, rgba(20,30,40,0.5) 100%);
+    border: 1px solid rgba(0,229,255,0.2);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.05), inset 0 -1px 0 rgba(0,0,0,0.3);
+    transition: all .25s ease; white-space: nowrap;
+    position: relative;
+    transform: perspective(100px) translateZ(0);
+  }
+  .snb-link:hover { 
+    color: #b8d4e0; 
+    background: linear-gradient(135deg, rgba(0,229,255,0.12) 0%, rgba(0,229,255,0.06) 100%);
+    border-color: rgba(0,229,255,0.4);
+    box-shadow: 0 4px 8px rgba(0,229,255,0.15), 0 0 16px rgba(0,229,255,0.2), inset 0 1px 0 rgba(255,255,255,0.08), inset 0 -1px 0 rgba(0,0,0,0.2);
+    transform: perspective(100px) translateZ(4px);
+  }
+  .snb-link.snb-active { 
+    color: #00e5ff; 
+    background: linear-gradient(135deg, rgba(0,229,255,0.2) 0%, rgba(0,229,255,0.12) 100%);
+    border-color: rgba(0,229,255,0.6);
+    box-shadow: 0 6px 12px rgba(0,229,255,0.25), 0 0 24px rgba(0,229,255,0.35), inset 0 1px 0 rgba(255,255,255,0.12), inset 0 -1px 0 rgba(0,0,0,0.15);
+    text-shadow: 0 0 10px rgba(0,229,255,0.5), 0 1px 2px rgba(0,0,0,0.5);
+    transform: perspective(100px) translateZ(6px);
+  }
+  .snb-link .snb-num { font-size: 9px; opacity: .6; font-weight: 400; }
+  .snb-sep { width: 1px; height: 20px; background: #0d1f30; margin: 0 6px; flex-shrink: 0; }
+  .snb-arrows { display: flex; align-items: center; gap: 8px; margin-left: 16px; }
+  .snb-arrow {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px; border-radius: 4px;
+    border: 1.5px solid #00c8c8; background: rgba(0,200,200,0.08);
+    color: #00e5e5; text-decoration: none; font-size: 16px;
+    transition: background .2s, box-shadow .2s;
+  }
+  .snb-arrow:hover { background: rgba(0,200,200,0.22); box-shadow: 0 0 20px rgba(0,200,200,0.25); }
+  .snb-arrow.snb-disabled { opacity: 0.25; pointer-events: none; }
+  .snb-count { font-family: 'Share Tech Mono','JetBrains Mono',monospace; font-size: 13px; color: #445566; letter-spacing: 2px; min-width: 60px; text-align: center; }
+  .snb-count span { color: #00c8c8; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="header-banner">
+  <div class="header-content">
+    <div class="header-brand">
+      <div class="hb-top">T H E</div>
+      <div class="hb-name"><span class="hb-market">MARKET</span> <span class="hb-sniffer">SNIFFER</span></div>
+    </div>
+    <div class="site-nav-bar">
+      <a class="snb-arrow" href="1.html">&#8592;</a>
+      <div class="snb-links">
+        <a class="snb-link snb-active" href="1.html"><span class="snb-num">1.</span>NIFTY 50</a>
+        <a class="snb-link" href="2.html"><span class="snb-num">2.</span>SECTORS</a>
+        <a class="snb-link" href="5.html"><span class="snb-num">3.</span>FII/DII</a>
+        <a class="snb-link" href="3.html"><span class="snb-num">4.</span>OI</a>
+        <a class="snb-link" href="4.html"><span class="snb-num">5.</span>PCR</a>
+        <a class="snb-link" href="8.html"><span class="snb-num">6.</span>S&R</a>
+        <a class="snb-link" href="6.html"><span class="snb-num">7.</span>LB/SB</a>
+        <a class="snb-link" href="7.html"><span class="snb-num">8.</span>COMBINED</a>
+      </div>
+      <a class="snb-arrow" href="5.html">&#8594;</a>
+    </div>
+  </div>
+</div>
+
+<div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+
+<div class="slide-container">
+  <div class="spiral-binding">
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+    <div class="spiral-loop"></div>
+  </div>
+  <div class="slide" id="slide">
+
+  <div class="corner-circle"></div>
+
+  <!-- LOGO -->
+  <div class="logo-circle">
+    <div class="logo-the">THE</div>
+    <div class="logo-market">MARKET</div>
+    <div class="logo-sniffer">SNIFFER</div>
+    <div class="logo-divider"></div>
+    <div class="logo-yt-row">
+      <span class="logo-yt-play">▶</span>
+      <span class="logo-yt">YouTube Channel</span>
+    </div>
+    <div class="logo-telescope">🔭</div>
+  </div>
+
+  <!-- TITLE -->
+  <div class="main-title" id="index-name" data-ef contenteditable="false">NIFTY 50</div>
+  <div class="subtitle">MARKET ANALYSIS</div>
+  <div class="divider"></div>
+
+  <!-- META -->
+  <div class="meta-row">
+    <span class="meta-cal">📅</span>
+    <span class="meta-date" id="meta-date" data-ef contenteditable="false">2 Feb 2026</span>
+    <span class="meta-sep">|</span>
+    <span class="meta-tag" id="meta-tags" data-ef contenteditable="false">Support &amp; Resistance &nbsp;|&nbsp; Open Interest &nbsp;|&nbsp; PCR &nbsp;|&nbsp; FII/DII Data</span>
+  </div>
+
+  <!-- CLOSE -->
+  <div class="close-row">
+    <span class="close-label">NIFTY CLOSE:&nbsp;</span>
+    <span class="close-num" id="close-val" data-ef contenteditable="false">25,571</span>
+    <span class="close-change" id="close-change" data-ef contenteditable="false" style="color:#00e84c;">(+200🔺)</span>
+  </div>
+  <div class="close-row trend-row">
+    <span class="trend-label">TREND:&nbsp;</span>
+    <span class="trend-num" id="trend-val" data-ef contenteditable="false">Trending With Bullish Bias</span>
+  </div>
+  <div class="close-row trend-row">
+    <span class="trend-label" style="color: #00e84c;">Advances:&nbsp;</span>    <span class="trend-num" id="advances-val" data-ef contenteditable="false">1315</span>
+    <span class="trend-label" style="color: #999999;">&nbsp;&nbsp;&nbsp;Unchanged:&nbsp;</span>    <span class="trend-num" id="unchanged-val" data-ef contenteditable="false">107</span>
+    <span class="trend-label" style="color: #ff4444;">&nbsp;&nbsp;&nbsp;Declines:&nbsp;</span>    <span class="trend-num" id="declines-val" data-ef contenteditable="false">1872</span>
+  </div>
+
+  <!-- STATS -->
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-label">NIFTY FUTURE</div>
+      <div class="stat-value val-green" id="future-val" data-ef contenteditable="false">25,571</div>
+	  <div class="future-change" id="future-change" data-ef contenteditable="false" style="color:#00e84c;">🔺9🔺+10</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">OPEN</div>
+      <div class="stat-value val-purple" id="open-val" data-ef contenteditable="false">25,571</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">HIGH</div>
+      <div class="stat-value val-yellow" id="high-val" data-ef contenteditable="false">25,571</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">LOW</div>
+      <div class="stat-value val-cyan" id="low-val" data-ef contenteditable="false">25,500</div>
+    </div>
+  </div>
+
+  <div class="disclaimer" id="disclaimer" data-ef contenteditable="false">For educational purposes only. Not SEBI registered advice. Consult a certified financial advisor before trading.</div>
+  <div class="error-msg" id="error-msg"></div>
+</div>
+
+</div><!-- /slide-container -->
+
+<div style="text-align: center; margin-top: 20px;">
+  <button class="tbtn tbtn-edit" id="editBtn" onclick="toggleEdit()">✏ EDIT MODE</button>
+  <button class="tbtn tbtn-json" id="jsonBtn" onclick="loadData()">🔄 UPDATE FROM JSON</button>
+</div>
+
+<script>
+let editMode = false;
+let currentData = {};
+const STORAGE_KEY = 'page1_edited_data';
+
+// Initialize: Load from localStorage if available, otherwise from JSON
+async function initData() {
+  const savedData = localStorage.getItem(STORAGE_KEY);
+  if (savedData) {
+    try {
+      currentData = JSON.parse(savedData);
+      updateDisplay(currentData);
+      console.log('Loaded edited data from localStorage');
+    } catch (err) {
+      console.error('Failed to parse saved data, loading from JSON:', err);
+      await loadDataFromJSON();
+    }
+  } else {
+    await loadDataFromJSON();
+  }
+}
+
+// Load fresh data from JSON file (called by "UPDATE FROM JSON" button)
+async function loadData() {
+  const btn = document.getElementById('jsonBtn');
+  const errorMsg = document.getElementById('error-msg');
+  const slide = document.querySelector('.slide');
+  
+  try {
+    // Exit edit mode if active
+    if (editMode) {
+      editMode = false;
+      const editBtn = document.getElementById('editBtn');
+      editBtn.textContent = '✏ EDIT MODE';
+      editBtn.classList.remove('on');
+      slide.classList.remove('edit');
+      document.querySelectorAll('[data-ef]').forEach(el => el.contentEditable = 'false');
+    }
+    
+    // Show loading state
+    btn.disabled = true;
+    btn.textContent = '⏳ LOADING...';
+    errorMsg.style.display = 'none';
+    
+    const response = await fetch('page1.json');
+    if (!response.ok) throw new Error('Could not load page1.json — ' + response.statusText);
+    const d = await response.json();
+    
+    // Store data globally
+    currentData = d;
+    
+    // Clear any saved edits
+    localStorage.removeItem(STORAGE_KEY);
+    
+    updateDisplay(d);
+    
+    // Success feedback
+    btn.textContent = '✓ UPDATED!';
+    slide.style.transition = 'filter .3s';
+    slide.style.filter = 'brightness(1.3)';
+    setTimeout(() => {
+      slide.style.filter = '';
+      btn.textContent = '🔄 UPDATE FROM JSON';
+      btn.disabled = false;
+    }, 800);
+
+  } catch (err) {
+    errorMsg.style.display = 'block';
+    errorMsg.textContent = '⚠ ' + err.message;
+    btn.textContent = '❌ FAILED';
+    setTimeout(() => {
+      btn.textContent = '🔄 UPDATE FROM JSON';
+      btn.disabled = false;
+    }, 2000);
+    console.error(err);
+  }
+}
+
+// Helper function to load from JSON (used internally)
+async function loadDataFromJSON() {
+  try {
+    const response = await fetch('page1.json');
+    if (!response.ok) throw new Error('Could not load page1.json — ' + response.statusText);
+    const d = await response.json();
+    currentData = d;
+    updateDisplay(d);
+  } catch (err) {
+    const el = document.getElementById('error-msg');
+    el.style.display = 'block';
+    el.textContent = '⚠ ' + err.message;
+    console.error(err);
+  }
+}
+
+function updateDisplay(d) {
+  // Ensure all elements are not in edit mode
+  document.querySelectorAll('[data-ef]').forEach(el => el.contentEditable = 'false');
+  
+  if (d.indexName) document.getElementById('index-name').textContent = d.indexName;
+  if (d.date)      document.getElementById('meta-date').textContent  = d.date;
+
+  if (d.metaTags && Array.isArray(d.metaTags))
+    document.getElementById('meta-tags').innerHTML = d.metaTags.join(' &nbsp;|&nbsp; ');
+
+  if (d.close !== undefined) {
+    const sign  = d.closeChange >= 0 ? '+' : '';
+    const arrow = d.closeChange >= 0 ? '🔺' : '🔻';
+    document.getElementById('close-val').textContent    = fmt(d.close);
+    document.getElementById('close-change').textContent = `(${sign}${d.closeChange}${arrow})`;
+    document.getElementById('close-change').style.color = d.closeChange >= 0 ? '#00e84c' : '#ff4444';
+  }
+
+  if (d.trend) {
+    let trendText = d.trend;
+    const trendEl = document.getElementById('trend-val');
+    
+    // Replace keywords with colored uppercase versions
+    trendText = trendText.replace(/(bullish)/gi, '<span style="color:#00e84c !important">BULLISH</span>');
+    trendText = trendText.replace(/(bearish)/gi, '<span style="color:#ff4444 !important">BEARISH</span>');
+    trendText = trendText.replace(/(consolidation)/gi, '<span style="color:#FFFFFF!important">CONSOLIDATION</span>');
+    
+    trendEl.innerHTML = trendText;
+  }
+
+  // Set Advances, Unchanged, Declines values
+  if (d.Advances !== undefined) document.getElementById('advances-val').textContent = d.Advances;
+  if (d.Unchange !== undefined) document.getElementById('unchanged-val').textContent = d.Unchange;
+  if (d.Declines !== undefined) document.getElementById('declines-val').textContent = d.Declines;
+
+  // Handle future values (may be null)
+  if (d.future !== undefined) {
+    if (d.future !== null) {
+      // futureChange arrow and value
+      const futureArrow = d.futureChange >= 0 ? '🔺' : '🔻';
+      const futureValue = Math.abs(d.futureChange);
+      const futureColor = d.futureChange >= 0 ? '#00e84c' : '#ff4444';
+      
+      // premium adjustment arrow and value
+      const premiumAdj = d.premiumAdjustment !== undefined ? d.premiumAdjustment : 10;
+      const premiumSign = premiumAdj >= 0 ? '+' : '';
+      const premiumArrow = premiumAdj > 0 ? '🔺' : premiumAdj < 0 ? '🔻' : '—';
+      const premiumColor = premiumAdj >= 0 ? '#6b9b7a' : '#b87070';
+      
+      document.getElementById('future-val').textContent = `${fmt(d.future)}`;
+      document.getElementById('future-change').innerHTML = `<span style="color:${futureColor}">${futureArrow}${futureValue}</span><span style="color:${premiumColor};font-size: 20px;">(${premiumSign}${premiumAdj}${premiumArrow})</span>`;
+      document.getElementById('future-change').style.color = '${futureColor}';
+    } else {
+      document.getElementById('future-val').textContent = 'N/A';
+      document.getElementById('future-change').textContent = '${futureColor}';
+    }
+  }
+
+  if (d.open  !== undefined) document.getElementById('open-val').textContent  = fmt(d.open);
+  if (d.high  !== undefined) document.getElementById('high-val').textContent  = fmt(d.high);
+  if (d.low   !== undefined) document.getElementById('low-val').textContent   = fmt(d.low);
+  if (d.disclaimer)          document.getElementById('disclaimer').textContent = d.disclaimer;
+}
+
+function toggleEdit() {
+  editMode = !editMode;
+  const btn = document.getElementById('editBtn');
+  const slide = document.querySelector('.slide');
+  const editables = document.querySelectorAll('[data-ef]');
+  
+  if (editMode) {
+    btn.textContent = '✓ SAVE';
+    btn.classList.add('on');
+    slide.classList.add('edit');
+    
+    // Enable contenteditable on all data-ef elements
+    editables.forEach(el => {
+      el.contentEditable = 'true';
+      // Remove formatting from numbers for editing
+      const id = el.id;
+      if (['close-val', 'future-val', 'open-val', 'high-val', 'low-val'].includes(id)) {
+        const num = parseFloat(el.textContent.replace(/,/g, ''));
+        if (!isNaN(num)) el.textContent = num;
+      }
+      // Simplify change display for editing - extract both values
+      if (id === 'future-change') {
+        // Extract both futureChange and premiumAdjustment
+        const allNumbers = el.textContent.match(/([+-]?\d+[\d.]*)/g);
+        if (allNumbers && allNumbers.length >= 2) {
+          el.textContent = `${allNumbers[0]}, ${allNumbers[1]}`;
+        } else if (allNumbers && allNumbers.length === 1) {
+          el.textContent = `${allNumbers[0]}, ${currentData.premiumAdjustment || 10}`;
+        }
+      }
+      if (id === 'close-change') {
+        const match = el.textContent.match(/([+-]?\d+[\d.]*)/);
+        if (match) el.textContent = match[1];
+      }
+      // For trend field, convert to plain text for editing
+      if (id === 'trend-val') {
+        el.textContent = el.textContent; // This strips HTML tags automatically
+      }
+    });
+  } else {
+    btn.textContent = '✏ EDIT MODE';
+    btn.classList.remove('on');
+    slide.classList.remove('edit');
+    
+    // Disable contenteditable and save changes
+    editables.forEach(el => {
+      el.contentEditable = 'false';
+    });
+    
+    // Update currentData from edited content
+    currentData.indexName = document.getElementById('index-name').textContent;
+    currentData.date = document.getElementById('meta-date').textContent;
+    currentData.metaTags = document.getElementById('meta-tags').textContent.split('|').map(t => t.trim()).filter(t => t);
+    currentData.close = parseFloat(document.getElementById('close-val').textContent.replace(/,/g, '')) || 0;
+    currentData.closeChange = parseFloat(document.getElementById('close-change').textContent) || 0;
+    currentData.trend = document.getElementById('trend-val').textContent;
+    currentData.Advances = parseInt(document.getElementById('advances-val').textContent) || 0;
+    currentData.Unchange = parseInt(document.getElementById('unchanged-val').textContent) || 0;
+    currentData.Declines = parseInt(document.getElementById('declines-val').textContent) || 0;
+    
+    const futureText = document.getElementById('future-val').textContent;
+    if (futureText === 'N/A' || futureText.trim() === '') {
+      currentData.future = null;
+      currentData.futureChange = null;
+    } else {
+      currentData.future = parseFloat(futureText.replace(/,/g, '')) || null;
+      // Extract futureChange and premiumAdjustment from future-change field
+      const futureChangeText = document.getElementById('future-change').textContent;
+      const allNumbers = futureChangeText.match(/([+-]?\d+[\d.]*)/g);
+      if (allNumbers && allNumbers.length >= 1) {
+        currentData.futureChange = parseFloat(allNumbers[0]);
+        // If second number exists, use it; otherwise keep existing or default to 10
+        if (allNumbers.length >= 2) {
+          currentData.premiumAdjustment = parseFloat(allNumbers[1]);
+        } else if (currentData.premiumAdjustment === undefined) {
+          currentData.premiumAdjustment = 10;
+        }
+      } else {
+        currentData.futureChange = null;
+      }
+    }
+    
+    currentData.open = parseFloat(document.getElementById('open-val').textContent.replace(/,/g, '')) || 0;
+    currentData.high = parseFloat(document.getElementById('high-val').textContent.replace(/,/g, '')) || 0;
+    currentData.low = parseFloat(document.getElementById('low-val').textContent.replace(/,/g, '')) || 0;
+    currentData.disclaimer = document.getElementById('disclaimer').textContent;
+    
+    // Save to localStorage
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+    console.log('Saved edited data to localStorage');
+    
+    // Re-apply formatting
+    updateDisplay(currentData);
+    
+    // Flash feedback
+    slide.style.transition = 'filter .25s';
+    slide.style.filter = 'brightness(1.2)';
+    setTimeout(() => slide.style.filter = '', 350);
+  }
+}
+
+function fmt(n) { return Number(n).toLocaleString('en-IN'); }
+
+initData();
+</script>
+
+</body>
+</html>

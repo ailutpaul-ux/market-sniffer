@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=500, initial-scale=1.0">
+<title>FII / DII Activity - YouTube Shorts</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Anton&family=JetBrains+Mono:wght@400;600;700&family=Exo+2:wght@400;600;800&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: #07090f;
+    font-family: 'Barlow', sans-serif;
+    color: #e8eaf6;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* ── MAIN CONTAINER (YouTube Shorts Size: 500x900) ── */
+  .shorts-container {
+    width: 500px;
+    height: 900px;
+    background: #0e1628;
+    position: relative;
+    overflow: hidden;
+    margin: 0 auto;
+  }
+
+  /* Accent borders */
+  .shorts-container::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);
+    z-index: 2;
+  }
+  .shorts-container::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, transparent 0%, #00e5ff 50%, transparent 100%);
+    z-index: 2;
+  }
+
+  /* ── TOP HEADER - THIN STRIP WITH LOGO ONLY ── */
+  .top-header {
+    padding: 8px 18px;
+    background: linear-gradient(135deg, #0b1019 0%, #0d1520 40%, #0f1a28 100%);
+    border-bottom: 2px solid #00e5ff;
+    box-shadow: 0 2px 12px rgba(0,229,255,0.3);
+    position: relative;
+  }
+
+  .brand {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .brand-the {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 8px;
+    font-weight: 700;
+    color: #00e5ff;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    text-shadow: 0 0 8px rgba(0,229,255,0.6);
+  }
+  .brand-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1.5px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+  .brand-name .red   { color: #ff6b6b; text-shadow: 0 0 8px rgba(255,107,107,0.5); }
+  .brand-name .white { color: #ffffff; text-shadow: 0 0 8px rgba(255,255,255,0.3); }
+  /* ── TITLE STRIP ── */
+  .title-strip {
+    background: linear-gradient(135deg, #0a0e16 0%, #0e1520 50%, #0a0e16 100%);
+    border-bottom: 2px solid #00e5ff;
+    padding: 7px 15px;
+    text-align: center;
+    box-shadow: 0 2px 12px rgba(0,229,255,0.25);
+  }
+
+  .page-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 2px;
+    color: #fff;
+    line-height: 1;
+    text-shadow: 0 0 14px rgba(0,229,255,0.4), 0 2px 3px rgba(0,0,0,0.5);
+    background: transparent;
+  }
+  .page-title .cyan { 
+    color: #00e5ff;
+    text-shadow: 0 0 25px rgba(0,229,255,0.6);
+  }
+  /* ── NET FLOW CARDS - TWO ROWS ── */
+  .flow-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    padding: 10px 12px;
+  }
+
+  .flow-card {
+    background: #0f1828;
+    padding: 10px 8px;
+    position: relative;
+    border-radius: 4px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.35);
+  }
+  .flow-card.fii { border-top: 4px solid #ff3d57; }
+  .flow-card.dii { border-top: 4px solid #ffd600; }
+  .flow-card.long { border-top: 4px solid #00e676; }
+  .flow-card.short { border-top: 4px solid #ff9100; }
+
+  .flow-card-label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #607d8b;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .flow-card-value {
+    font-family: 'Anton', sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.8px;
+    line-height: 1;
+    text-shadow: 0 0 12px currentColor;
+  }
+  .flow-card.fii .flow-card-value { color: #ff3d57; }
+  .flow-card.dii .flow-card-value { color: #ffd600; }
+  .flow-card.long .flow-card-value { color: #00e676; }
+  .flow-card.short .flow-card-value { color: #ff9100; }
+
+  .flow-card-sub {
+    font-family: 'Barlow', sans-serif;
+    font-size: 9px;
+    color: #556677;
+    margin-top: 6px;
+    letter-spacing: 0.1px;
+  }
+
+  /* ── DERIVATIVE TABLE ── */
+  .deriv-section {
+    margin: 0 12px 12px 12px;
+    border: 2px solid #1a2a3a;
+    border-radius: 5px;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  .deriv-header {
+    background: #111f32;
+    padding: 8px 12px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 700;
+    color: #00e5ff;
+    letter-spacing: 1.5px;
+    text-align: center;
+    border-bottom: 2px solid #1a2a3a;
+    text-shadow: 0 0 10px rgba(0,229,255,0.55);
+  }
+
+  .deriv-row {
+    display: grid;
+    grid-template-columns: 2fr 1.2fr 1fr 1.5fr;
+    gap: 5px;
+    align-items: center;
+    padding: 10px 11px;
+    border-bottom: 1px solid #0f1825;
+  }
+  .deriv-row:last-child { border-bottom: none; }
+  .deriv-row:nth-child(odd)  { background: #0d1622; }
+  .deriv-row:nth-child(even) { background: #0b1018; }
+
+  .deriv-name {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: #7a9ab0;
+    letter-spacing: 0.3px;
+    font-weight: 600;
+  }
+  .deriv-name .hl { color: #00e5ff; }
+
+  .deriv-details {
+    display: contents;
+  }
+
+  .deriv-total {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: #da8ee7;
+    letter-spacing: 0.2px;
+  }
+
+  .deriv-change {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.2px;
+  }
+  .deriv-change.positive { color: #00e676; }
+  .deriv-change.negative { color: #ff3d57; }
+
+  .deriv-signal {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    text-align: center;
+    padding: 5px 6px;
+    background: rgba(0,0,0,0.35);
+    border-radius: 3px;
+  }
+
+  /* Signal color classes */
+  .sig-red    { color: #ff3d57; text-shadow: 0 0 12px rgba(255,61,87,0.5); }
+  .sig-green  { color: #00e676; text-shadow: 0 0 12px rgba(0,230,118,0.5); }
+  .sig-yellow { color: #ffd600; text-shadow: 0 0 12px rgba(255,214,0,0.5); }
+  .sig-cyan   { color: #00e5ff; text-shadow: 0 0 12px rgba(0,229,255,0.5); }
+  .sig-orange { color: #ff9100; text-shadow: 0 0 12px rgba(255,145,0,0.5); }
+  .sig-dim    { color: #546e7a; }
+
+  /* ── INLINE EDIT MODE ── */
+  .shorts-container.edit [data-ef] {
+    outline: 1.5px dashed rgba(0,229,255,0.35);
+    cursor: text;
+    border-radius: 2px;
+    padding: 2px 4px;
+    margin: -2px -4px;
+  }
+  .shorts-container.edit [data-ef]:hover {
+    outline-color: rgba(0,229,255,0.7);
+  }
+  .shorts-container.edit [data-ef]:focus {
+    outline: 2px solid rgba(0,229,255,1);
+    background: rgba(0,229,255,0.08);
+  }
+
+  [contenteditable] { outline: none; }
+
+  /* ── BUTTONS ── */
+  .button-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    align-items: center;
+    margin: 15px 0;
+  }
+
+  .tbtn,
+  .export-btn {
+    background: #00e5ff;
+    color: #000;
+    border: none;
+    padding: 7px 14px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  
+  .tbtn-edit { background: #00e5ff; }
+  .tbtn-edit:hover { background: #00b8d4; }
+  .tbtn-edit.on { background: #00e676; }
+  
+  .tbtn-json { background: #ffa726; }
+  .tbtn-json:hover { background: #ff9800; }
+  
+  .export-btn { background: #00e5ff; }
+  .export-btn:hover { 
+    background: #00b8d4;
+    transform: translateY(-1px);
+  }
+  
+  .tbtn:disabled,
+  .export-btn:disabled { 
+    opacity: 0.5; 
+    cursor: not-allowed; 
+  }
+
+  /* ── DISCLAIMER ── */
+  .disclaimer {
+    position: absolute;
+    bottom: 8px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 28px;
+    color: #FFA726;
+    font-family: 'Exo 2', sans-serif;
+    letter-spacing: 0.1px;
+    padding: 0 18px;
+    line-height: 1.2;
+  }
+
+  .export-status {
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    color: #00e5ff;
+    margin-top: 8px;
+    min-height: 16px;
+  }
+</style>
+</head>
+<body>
+
+<div class="shorts-container" id="slide">
+
+  <!-- TOP HEADER - THIN LOGO STRIP -->
+  <div class="top-header">
+    <div class="brand">
+      <div class="brand-the">T H E</div>
+      <div class="brand-name">
+        <span class="red">MARKET&nbsp;</span><span class="white">SNIFFER</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TITLE STRIP -->
+  <div class="title-strip">
+    <div class="page-title">FII / <span class="cyan">DII ACTIVITY</span></div>
+  </div>
+
+  <!-- NET FLOW CARDS -->
+  <div class="flow-cards">
+    <div class="flow-card fii" id="fiiCard">
+      <div class="flow-card-label" id="fiiLabel" contenteditable="false" data-ef>FII Net (19 Feb)</div>
+      <div class="flow-card-value" id="fiiValue" contenteditable="false" data-ef">-&#8377;880 Cr</div>
+      <div class="flow-card-sub"   id="fiiSub" contenteditable="false" data-ef>Net Sellers — Bearish Pressure</div>
+    </div>
+    <div class="flow-card dii" id="diiCard">
+      <div class="flow-card-label" id="diiLabel" contenteditable="false" data-ef>DII Net (19 Feb)</div>
+      <div class="flow-card-value" id="diiValue" contenteditable="false" data-ef">-&#8377;596 Cr</div>
+      <div class="flow-card-sub"   id="diiSub" contenteditable="false" data-ef>DII also net sellers — caution</div>
+    </div>
+    <div class="flow-card long" id="longCard">
+      <div class="flow-card-label" id="longLabel" contenteditable="false" data-ef>% Long</div>
+      <div class="flow-card-value" id="longValue" contenteditable="false" data-ef>16%</div>
+      <div class="flow-card-sub"   id="longSub" contenteditable="false" data-ef>Long Positions</div>
+    </div>
+    <div class="flow-card short" id="shortCard">
+      <div class="flow-card-label" id="shortLabel" contenteditable="false" data-ef>% Short</div>
+      <div class="flow-card-value" id="shortValue" contenteditable="false" data-ef>84%</div>
+      <div class="flow-card-sub"   id="shortSub" contenteditable="false" data-ef>Short Positions</div>
+    </div>
+  </div>
+
+  <!-- FII DERIVATIVE POSITIONING TABLE -->
+  <div class="deriv-section">
+    <div class="deriv-header" id="derivTitle" contenteditable="false" data-ef>FII DERIVATIVE POSITIONING</div>
+    <div id="derivRows"></div>
+  </div>
+
+  <div class="disclaimer">For educational purposes only.. Not SEBI registered advice.</div>
+</div><!-- /shorts-container -->
+
+<!-- CONTROL BUTTONS -->
+<div class="button-row">
+  <button class="tbtn tbtn-edit" id="editBtn" onclick="toggleEdit()">✏ EDIT</button>
+  <button class="tbtn tbtn-json" onclick="updateFromJSON()">🔄 UPDATE</button>
+  <button class="export-btn" id="exportPNG" onclick="exportImage('png')">💾 PNG</button>
+  <button class="export-btn" id="exportJPG" onclick="exportImage('jpg')">💾 JPG</button>
+</div>
+<div class="export-status" id="exportStatus"></div>
+
+<script>
+  // ────────────────────────────────────────────────────────────────────────
+  // STATE & CONFIG
+  // ────────────────────────────────────────────────────────────────────────
+  const STORAGE_KEY = 'page5s_edited_data';
+  let editMode = false;
+  let currentData = {};
+
+  // Map signalColor string → CSS class
+  const sigClass = c => ({
+    red:    'sig-red',
+    green:  'sig-green',
+    yellow: 'sig-yellow',
+    cyan:   'sig-cyan',
+    orange: 'sig-orange',
+    dim:    'sig-dim'
+  }[c] || 'sig-dim');
+
+  // Get color class for change value
+  function getChangeClass(changeStr) {
+    const match = changeStr.match(/Change:\s*([+-]?\d+)/);
+    if (!match) return '';
+    const value = parseInt(match[1]);
+    return value >= 0 ? 'positive' : 'negative';
+  }
+
+  // Auto-colour FII card: red if negative, green if positive
+  function applyFiiColor(value) {
+    const isNeg = String(value).startsWith('-');
+    const card  = document.getElementById('fiiCard');
+    const val   = document.getElementById('fiiValue');
+    val.style.color              = isNeg ? '#ff3d57' : '#00e676';
+    card.style.borderTopColor    = isNeg ? '#ff3d57' : '#00e676';
+  }
+
+  // Auto-colour DII card: yellow(caution) if negative, green if positive
+  function applyDiiColor(value) {
+    const isNeg = String(value).startsWith('-');
+    const card  = document.getElementById('diiCard');
+    const val   = document.getElementById('diiValue');
+    val.style.color              = isNeg ? '#ffd600' : '#00e676';
+    card.style.borderTopColor    = isNeg ? '#ffd600' : '#00e676';
+  }
+
+  // Render derivative rows
+  function renderDerivRows(rows) {
+    document.getElementById('derivRows').innerHTML = rows.map((r, i) => `
+      <div class="deriv-row">
+        <div class="deriv-name" id="deriv-${i}-name" contenteditable="false" data-ef>${r.name}</div>
+        <div class="deriv-details">
+          <div class="deriv-total" id="deriv-${i}-total" contenteditable="false" data-ef>${r.total}</div>
+          <div class="deriv-change ${getChangeClass(r.change)}" id="deriv-${i}-change" contenteditable="false" data-ef>${r.change}</div>
+        </div>
+        <div class="deriv-signal ${sigClass(r.signalColor)}" id="deriv-${i}-signal" contenteditable="false" data-ef data-color="${r.signalColor}">${r.signal}</div>
+      </div>`).join('');
+  }
+
+  // ────────────────────────────────────────────────────────────────────────
+  // EDIT MODE FUNCTIONALITY
+  // ────────────────────────────────────────────────────────────────────────
+  function toggleEdit() {
+    const slide = document.getElementById('slide');
+    const btn = document.getElementById('editBtn');
+    const editable = slide.querySelectorAll('[data-ef]');
+
+    editMode = !editMode;
+
+    if (editMode) {
+      // Enter edit mode
+      slide.classList.add('edit');
+      btn.classList.add('on');
+      btn.textContent = '💾 SAVE';
+      editable.forEach(el => el.contentEditable = 'true');
+    } else {
+      // Save and exit edit mode
+      slide.classList.remove('edit');
+      btn.classList.remove('on');
+      btn.textContent = '✏ EDIT';
+      editable.forEach(el => el.contentEditable = 'false');
+
+      // Collect edited data
+      currentData.derivTitle = document.getElementById('derivTitle').textContent.trim();
+
+      currentData.fiiLabel = document.getElementById('fiiLabel').textContent.trim();
+      currentData.fiiValue = document.getElementById('fiiValue').textContent.trim();
+      currentData.fiiSub = document.getElementById('fiiSub').textContent.trim();
+
+      currentData.diiLabel = document.getElementById('diiLabel').textContent.trim();
+      currentData.diiValue = document.getElementById('diiValue').textContent.trim();
+      currentData.diiSub = document.getElementById('diiSub').textContent.trim();
+
+      currentData.longLabel = document.getElementById('longLabel').textContent.trim();
+      currentData.longValue = document.getElementById('longValue').textContent.trim();
+      currentData.longSub = document.getElementById('longSub').textContent.trim();
+
+      currentData.shortLabel = document.getElementById('shortLabel').textContent.trim();
+      currentData.shortValue = document.getElementById('shortValue').textContent.trim();
+      currentData.shortSub = document.getElementById('shortSub').textContent.trim();
+
+      // Collect derivative rows data
+      currentData.derivRows = [];
+      for (let i = 0; i < 4; i++) {
+        const nameEl = document.getElementById(`deriv-${i}-name`);
+        const totalEl = document.getElementById(`deriv-${i}-total`);
+        const changeEl = document.getElementById(`deriv-${i}-change`);
+        const signalEl = document.getElementById(`deriv-${i}-signal`);
+        if (nameEl && totalEl && changeEl && signalEl) {
+          currentData.derivRows.push({
+            name: nameEl.innerHTML.trim(),
+            total: totalEl.textContent.trim(),
+            change: changeEl.textContent.trim(),
+            signal: signalEl.textContent.trim(),
+            signalColor: signalEl.getAttribute('data-color') || 'green'
+          });
+        }
+      }
+
+      // Save to localStorage
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(currentData));
+      console.log('✓ Saved to localStorage:', currentData);
+
+      // Reapply border colors based on saved values
+      applyFiiColor(currentData.fiiValue);
+      applyDiiColor(currentData.diiValue);
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────────
+  // UPDATE FROM JSON (CLEARS LOCALSTORAGE)
+  // ────────────────────────────────────────────────────────────────────────
+  async function updateFromJSON() {
+    if (editMode) {
+      alert('Please exit edit mode first (save your edits).');
+      return;
+    }
+    localStorage.removeItem(STORAGE_KEY);
+    console.log('✓ Cleared localStorage, reloading from JSON...');
+    await loadData();
+  }
+
+  // ────────────────────────────────────────────────────────────────────────
+  // LOAD JSON DATA
+  // ────────────────────────────────────────────────────────────────────────
+  async function loadData() {
+    try {
+      const res = await fetch('fiidii.json');
+      if (!res.ok) throw new Error(`fiidii.json not found (HTTP ${res.status})`);
+      const d = await res.json();
+
+      currentData = { ...d };
+
+      if (d.derivTitle)  document.getElementById('derivTitle').textContent  = d.derivTitle;
+
+      // FII card
+      if (d.fiiLabel) document.getElementById('fiiLabel').textContent = d.fiiLabel;
+      if (d.fiiValue) {
+        document.getElementById('fiiValue').textContent = d.fiiValue;
+        applyFiiColor(d.fiiValue);
+      }
+      if (d.fiiSub) document.getElementById('fiiSub').textContent = d.fiiSub;
+
+      // DII card
+      if (d.diiLabel) document.getElementById('diiLabel').textContent = d.diiLabel;
+      if (d.diiValue) {
+        document.getElementById('diiValue').textContent = d.diiValue;
+        applyDiiColor(d.diiValue);
+      }
+      if (d.diiSub) document.getElementById('diiSub').textContent = d.diiSub;
+
+      // % Long card
+      if (d.longLabel) document.getElementById('longLabel').textContent = d.longLabel;
+      if (d.indexLongPct !== undefined) document.getElementById('longValue').textContent = d.indexLongPct + '%';
+      if (d.longSub) document.getElementById('longSub').textContent = d.longSub;
+
+      // % Short card
+      if (d.shortLabel) document.getElementById('shortLabel').textContent = d.shortLabel;
+      if (d.indexShortPct !== undefined) document.getElementById('shortValue').textContent = d.indexShortPct + '%';
+      if (d.shortSub) document.getElementById('shortSub').textContent = d.shortSub;
+
+      // Deriv table
+      if (Array.isArray(d.derivRows)) renderDerivRows(d.derivRows);
+
+    } catch (err) {
+      console.error('Error loading data:', err);
+      // Fallback: use default data if JSON not available
+      renderDerivRows([
+        { name: '<span class="hl">Index</span> Future', total: '₹125,432 Cr', change: 'Change: +2,341', signal: 'BULLISH BUILD', signalColor: 'green' },
+        { name: '<span class="hl">Index</span> Call', total: '₹45,123 Cr', change: 'Change: -890', signal: 'SLIGHT CAUTION', signalColor: 'yellow' },
+        { name: '<span class="hl">Index</span> Put', total: '₹38,654 Cr', change: 'Change: +1,234', signal: 'HEDGING UP', signalColor: 'cyan' },
+        { name: '<span class="hl">Stock</span> Future', total: '₹89,234 Cr', change: 'Change: -1,567', signal: 'BEARISH SHIFT', signalColor: 'red' }
+      ]);
+    }
+  }
+
+  // ────────────────────────────────────────────────────────────────────────
+  // INITIALIZE: CHECK LOCALSTORAGE FIRST, THEN JSON
+  // ────────────────────────────────────────────────────────────────────────
+  async function initData() {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const d = JSON.parse(stored);
+        currentData = d;
+        
+        if (d.derivTitle) document.getElementById('derivTitle').textContent = d.derivTitle;
+        
+        if (d.fiiLabel) document.getElementById('fiiLabel').textContent = d.fiiLabel;
+        if (d.fiiValue) {
+          document.getElementById('fiiValue').textContent = d.fiiValue;
+          applyFiiColor(d.fiiValue);
+        }
+        if (d.fiiSub) document.getElementById('fiiSub').textContent = d.fiiSub;
+        
+        if (d.diiLabel) document.getElementById('diiLabel').textContent = d.diiLabel;
+        if (d.diiValue) {
+          document.getElementById('diiValue').textContent = d.diiValue;
+          applyDiiColor(d.diiValue);
+        }
+        if (d.diiSub) document.getElementById('diiSub').textContent = d.diiSub;
+        
+        if (d.longLabel) document.getElementById('longLabel').textContent = d.longLabel;
+        if (d.longValue) document.getElementById('longValue').textContent = d.longValue;
+        if (d.longSub) document.getElementById('longSub').textContent = d.longSub;
+        
+        if (d.shortLabel) document.getElementById('shortLabel').textContent = d.shortLabel;
+        if (d.shortValue) document.getElementById('shortValue').textContent = d.shortValue;
+        if (d.shortSub) document.getElementById('shortSub').textContent = d.shortSub;
+        
+        if (Array.isArray(d.derivRows)) renderDerivRows(d.derivRows);
+        
+        console.log('✓ Loaded from localStorage:', d);
+      } catch (e) {
+        console.error('Error parsing localStorage, loading from JSON:', e);
+        await loadData();
+      }
+    } else {
+      await loadData();
+    }
+  }
+
+  initData();
+
+  // ────────────────────────────────────────────────────────────────────────
+  // EXPORT FUNCTIONALITY
+  // ────────────────────────────────────────────────────────────────────────
+  
+  async function exportImage(format) {
+    const statusEl = document.getElementById('exportStatus');
+    const btnPNG = document.getElementById('exportPNG');
+    const btnJPG = document.getElementById('exportJPG');
+    
+    // Disable buttons during export
+    btnPNG.disabled = true;
+    btnJPG.disabled = true;
+    statusEl.textContent = `Generating ${format.toUpperCase()}...`;
+    
+    try {
+      const element = document.getElementById('slide');
+      
+      // Use html2canvas to capture the element
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#0e1628',
+        scale: 2, // Higher quality
+        logging: false,
+        width: 500,
+        height: 900,
+        windowWidth: 500,
+        windowHeight: 900
+      });
+      
+      // Convert canvas to blob
+      const blob = await new Promise(resolve => {
+        if (format === 'png') {
+          canvas.toBlob(resolve, 'image/png');
+        } else {
+          canvas.toBlob(resolve, 'image/jpeg', 0.95);
+        }
+      });
+      
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const timestamp = new Date().toISOString().slice(0,10);
+      link.download = `fii-dii-activity-${timestamp}.${format}`;
+      link.href = url;
+      link.click();
+      
+      // Clean up
+      URL.revokeObjectURL(url);
+      
+      statusEl.textContent = `✓ ${format.toUpperCase()} downloaded successfully!`;
+      setTimeout(() => {
+        statusEl.textContent = '';
+      }, 3000);
+      
+    } catch (error) {
+      console.error('Export error:', error);
+      statusEl.textContent = `✗ Error exporting ${format.toUpperCase()}`;
+      setTimeout(() => {
+        statusEl.textContent = '';
+      }, 3000);
+    } finally {
+      // Re-enable buttons
+      btnPNG.disabled = false;
+      btnJPG.disabled = false;
+    }
+  }
+</script>
+
+</body>
+</html>

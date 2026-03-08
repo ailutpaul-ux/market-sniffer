@@ -1,0 +1,94 @@
+{
+  "title": "PCR ANALYSIS",
+  "subtitleRow": "Put-Call Ratio \u2014 Sentiment Meter  |  Nifty 50  |  20 Feb 2026",
+  "gaugeLabel": "CURRENT PCR (OI)",
+  "guideTitle": "PCR INTERPRETATION GUIDE",
+  "footerNote": "PCR shows sentiment, not certainty \u2014 price action confirms the move.",
+  "pcr": 0.68,
+  "sentiment": "SENTIMENT: MILDLY BULLISH / NEUTRAL",
+  "statPcrLabel": "Current PCR",
+  "statVixLabel": "INDIA VIX",
+  "vix": 19.88,
+  "vixChange": "11.31%",
+  "oiChange": "14.58%",
+  "guideRows": [
+    {
+      "range": "PCR < 0.5",
+      "desc": "Extreme Bearish Positioning",
+      "signal": "CAUTION \u2013\nBULLISH REVERSAL",
+      "signalColor": "green",
+      "highlightRange": [
+        0,
+        0.5
+      ]
+    },
+    {
+      "range": "PCR 0.5 \u2013 0.7",
+      "desc": "Bearish Bias- Call writing pressure",
+      "signal": "BEARISH",
+      "signalColor": "red",
+      "highlightRange": [
+        0.5,
+        0.7
+      ]
+    },
+    {
+      "range": "PCR 0.7\u20131.2",
+      "desc": "Neutral / Healthy Trend",
+      "signal": "TREND CONTINUE",
+      "signalColor": "grey",
+      "highlightRange": [
+        0.7,
+        1.2
+      ]
+    },
+    {
+      "range": "PCR 1.2\u20131.4",
+      "desc": "Bull Gaining \u2014 Bullish Bias",
+      "signal": "BULLISH",
+      "signalColor": "green",
+      "highlightRange": [
+        1.2,
+        1.4
+      ]
+    },
+    {
+      "range": "PCR > 1.4",
+      "desc": "Overcrowded Bullish",
+      "signal": "CAUTION -\nBEARISH REVERSAL",
+      "signalColor": "red",
+      "highlightRange": [
+        1.4,
+        99
+      ]
+    },
+    {
+      "range": "PRICE UP + PCR RISING",
+      "desc": "Healthy bullish trend",
+      "signal": "BUY SIGNAL",
+      "signalColor": "green",
+      "highlightRange": "null"
+    },
+    {
+      "range": "PRICE UP + PCR FALLING",
+      "desc": "Rally weak ho rahi hai",
+      "signal": "SELL SIGNAL",
+      "signalColor": "red",
+      "highlightRange": "null"
+    },
+    {
+      "range": "PRICE DOWN + PCR RISING",
+      "desc": "Bottom picking / possible bounce",
+      "signal": "BUY SIGNAL",
+      "signalColor": "green",
+      "highlightRange": "null"
+    },
+    {
+      "range": "PRICE DOWN + PCR FALLING",
+      "desc": "Bearish continuation",
+      "signal": "SELL SIGNAL",
+      "signalColor": "red",
+      "highlightRange": "null"
+    }
+  ]
+}
