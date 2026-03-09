@@ -1,0 +1,1986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Market Sniffer – Card Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+
+/* ═══════════════════════════ RESET ═══════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cyan:   #00e5ff;
+  --red:    #ff3d57;
+  --gold:   #ffd54f;
+  --green:  #00ffaa;
+  --bg:     #03080f;
+  --panel:  #070d1c;
+  --card-bg:#080f22;
+  --border: rgba(0,229,255,0.15);
+  --glow-c: 0 0 18px rgba(0,229,255,0.5);
+  --glow-r: 0 0 18px rgba(255,61,87,0.55);
+  --glow-g: 0 0 18px rgba(255,213,79,0.5);
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  font-family: 'Rajdhani', sans-serif;
+  color: #fff;
+  overflow: hidden;
+}
+
+/* ═══════════════════════════ APP SHELL ═══════════════════════════ */
+.app {
+  display: grid;
+  grid-template-rows: 52px 1fr;
+  grid-template-columns: 520px 1fr;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  background: rgba(7,13,28,0.98);
+  border-bottom: 1px solid var(--border);
+  box-shadow: 0 2px 20px rgba(0,0,0,0.5);
+  z-index: 10;
+}
+
+.topbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topbar-logo {
+  width: 30px; height: 30px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0,229,255,0.5);
+  background: rgba(0,229,255,0.08);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.9rem;
+  box-shadow: 0 0 10px rgba(0,229,255,0.25);
+}
+.topbar-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+}
+.topbar-name .tm { color: #ff6b6b; }
+.topbar-name .ts { color: #fff; }
+.topbar-sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  color: rgba(0,229,255,0.4);
+  letter-spacing: 0.2em;
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tb-action {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  padding: 6px 14px;
+  border-radius: 5px;
+  border: 1px solid;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.tb-action.cyan { color: var(--cyan); border-color: rgba(0,229,255,0.4); background: rgba(0,229,255,0.08); }
+.tb-action.cyan:hover { background: rgba(0,229,255,0.18); box-shadow: 0 0 12px rgba(0,229,255,0.15); }
+.tb-action.red  { color: var(--red);  border-color: rgba(255,61,87,0.4);  background: rgba(255,61,87,0.08); }
+.tb-action.red:hover  { background: rgba(255,61,87,0.18); }
+.tb-action.gold { color: var(--gold); border-color: rgba(255,213,79,0.4); background: rgba(255,213,79,0.08); }
+.tb-action.gold:hover { background: rgba(255,213,79,0.18); }
+
+.exp-status {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--cyan);
+  letter-spacing: 0.08em;
+  min-width: 120px;
+  text-align: right;
+}
+
+/* ── LEFT EDITOR PANEL ── */
+.editor-panel {
+  grid-row: 2;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* scrollbar */
+.editor-panel::-webkit-scrollbar { width: 4px; }
+.editor-panel::-webkit-scrollbar-track { background: transparent; }
+.editor-panel::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.2); border-radius: 4px; }
+
+/* Editor sections */
+.ed-section {
+  padding: 14px 16px;
+  border-bottom: 1px solid rgba(0,229,255,0.07);
+}
+.ed-section:last-child { border-bottom: none; }
+
+.ed-section-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  color: rgba(0,229,255,0.45);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ed-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,229,255,0.2), transparent);
+}
+
+.ed-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  align-items: flex-end;
+}
+.ed-row:last-child { margin-bottom: 0; }
+
+.ed-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+.ed-group.narrow { flex: 0 0 100px; }
+.ed-group.icon-btn { flex: 0 0 34px; }
+
+.ed-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.52rem;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.12em;
+}
+
+.ed-input, .ed-select {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(0,229,255,0.15);
+  border-radius: 5px;
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.82rem;
+  padding: 6px 9px;
+  width: 100%;
+  transition: border-color 0.18s, box-shadow 0.18s;
+}
+.ed-input:focus, .ed-select:focus {
+  outline: none;
+  border-color: rgba(0,229,255,0.5);
+  box-shadow: 0 0 0 2px rgba(0,229,255,0.08);
+  background: rgba(0,229,255,0.03);
+}
+.ed-select option { background: #080f22; }
+
+.ed-btn {
+  background: rgba(0,229,255,0.08);
+  border: 1px solid rgba(0,229,255,0.25);
+  color: var(--cyan);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  padding: 6px 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.18s;
+  height: 30px;
+  display: flex; align-items: center; justify-content: center;
+}
+.ed-btn:hover { background: rgba(0,229,255,0.16); }
+.ed-btn.danger { color: var(--red); border-color: rgba(255,61,87,0.3); background: rgba(255,61,87,0.06); }
+.ed-btn.danger:hover { background: rgba(255,61,87,0.14); }
+
+/* Color dot indicator */
+.color-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-bottom: 1px;
+}
+
+/* Layout tab pills */
+.layout-pills {
+  display: flex;
+  gap: 6px;
+}
+.layout-pill {
+  flex: 1;
+  text-align: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.06em;
+  padding: 6px 4px;
+  border-radius: 5px;
+  border: 1px solid rgba(0,229,255,0.15);
+  color: rgba(255,255,255,0.35);
+  cursor: pointer;
+  transition: all 0.18s;
+  line-height: 1.4;
+}
+.layout-pill:hover { border-color: rgba(0,229,255,0.35); color: rgba(255,255,255,0.65); }
+.layout-pill.active {
+  border-color: var(--cyan);
+  color: var(--cyan);
+  background: rgba(0,229,255,0.07);
+}
+
+/* Signal theme pills */
+.theme-pills {
+  display: flex;
+  gap: 6px;
+}
+.theme-pill {
+  flex: 1;
+  text-align: center;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.52rem;
+  letter-spacing: 0.05em;
+  padding: 6px 4px;
+  border-radius: 5px;
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.35);
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.theme-pill[data-theme="theme-bearish"].active { border-color: var(--red);   color: var(--red);   background: rgba(255,61,87,0.08); }
+.theme-pill[data-theme="theme-bullish"].active { border-color: var(--green); color: var(--green); background: rgba(0,255,170,0.07); }
+.theme-pill[data-theme="theme-alert"].active   { border-color: var(--gold);  color: var(--gold);  background: rgba(255,213,79,0.07); }
+.theme-pill[data-theme="theme-neutral"].active { border-color: var(--cyan);  color: var(--cyan);  background: rgba(0,229,255,0.07); }
+
+/* Insight row */
+.insight-editor-row {
+  display: grid;
+  grid-template-columns: 1fr 82px;
+  gap: 6px;
+  margin-bottom: 6px;
+  align-items: center;
+}
+.insight-color-pick {
+  display: flex;
+  gap: 4px;
+}
+.ic-dot {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.15s;
+  flex-shrink: 0;
+}
+.ic-dot:hover { transform: scale(1.15); }
+.ic-dot.active { border-color: #fff; box-shadow: 0 0 6px currentColor; }
+
+/* ── RIGHT PREVIEW PANEL ── */
+.preview-panel {
+  grid-row: 2;
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,40,80,0.3) 0%, transparent 70%), var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 24px 20px 24px;
+  overflow-y: auto;
+  position: relative;
+}
+
+.preview-panel::-webkit-scrollbar { width: 4px; }
+.preview-panel::-webkit-scrollbar-track { background: transparent; }
+.preview-panel::-webkit-scrollbar-thumb { background: rgba(0,229,255,0.15); border-radius: 4px; }
+
+.preview-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  color: rgba(0,229,255,0.3);
+  letter-spacing: 0.22em;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 450px;
+}
+.preview-label::before, .preview-label::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(0,229,255,0.2), transparent);
+}
+
+/* ── CARD OUTER (exported target) ── */
+.card-outer {
+  transition: width 0.3s, min-height 0.3s;
+  position: relative;
+}
+.card-outer.portrait  { width: 420px; min-height: 680px; }
+.card-outer.landscape { width: 680px; min-height: 385px; }
+.card-outer.square    { width: 480px; min-height: 480px; }
+
+.card {
+  width: 100%;
+  min-height: inherit;
+  background: linear-gradient(155deg, #0c1330 0%, #060b18 55%, #0a1020 100%);
+  border: 1px solid rgba(0,229,255,0.22);
+  border-radius: 18px;
+  overflow: hidden;
+  position: relative;
+  box-shadow:
+    0 0 0 1px rgba(0,229,255,0.06),
+    0 0 50px rgba(0,229,255,0.07),
+    0 20px 80px rgba(0,0,0,0.8);
+  display: flex;
+  flex-direction: column;
+}
+/* ::before and ::after removed — html2canvas cannot handle
+   repeating-linear-gradient or multi-radial pseudo-elements.
+   Glow effects are re-applied via box-shadow and inline divs instead. */
+
+/* ── BRAND HEADER ── */
+.brand-header {
+  padding: 16px 22px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(0,229,255,0.1);
+  background: rgba(0,0,0,0.2);
+  position: relative; z-index: 2;
+  flex-shrink: 0;
+}
+.brand-left { display: flex; align-items: center; gap: 9px; }
+.brand-icon {
+  width: 32px; height: 32px; border-radius: 50%;
+  border: 1.5px solid rgba(0,229,255,0.5);
+  background: rgba(0,229,255,0.07);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.95rem;
+  box-shadow: 0 0 10px rgba(0,229,255,0.25);
+  flex-shrink: 0;
+}
+.brand-text { display: flex; flex-direction: column; }
+.brand-the {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.52rem; color: var(--cyan);
+  letter-spacing: 0.28em; text-shadow: var(--glow-c); line-height: 1;
+}
+.brand-name {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 0.88rem; font-weight: 900; letter-spacing: 0.08em; line-height: 1.1;
+  display: flex; gap: 4px;
+}
+.brand-name .bm { color: #ff6b6b; text-shadow: 0 0 10px rgba(255,107,107,0.5); }
+.brand-name .bs { color: #fff; }
+.brand-right { display: flex; flex-direction: column; align-items: flex-end; gap: 3px; }
+.brand-date  { font-family: 'Share Tech Mono', monospace; font-size: 0.55rem; color: rgba(255,255,255,0.3); letter-spacing: 0.1em; }
+.brand-badge {
+  font-family: 'Share Tech Mono', monospace; font-size: 0.5rem;
+  color: var(--gold); letter-spacing: 0.1em;
+  background: rgba(255,213,79,0.1); border: 1px solid rgba(255,213,79,0.25);
+  border-radius: 3px; padding: 1px 5px;
+}
+
+/* ── TITLE ── */
+.title-section {
+  padding: 16px 22px 10px;
+  text-align: center; position: relative; z-index: 2;
+}
+.title-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.55rem; color: rgba(255,255,255,0.3);
+  letter-spacing: 0.2em; margin-bottom: 8px;
+  cursor: text;
+  border-radius: 3px;
+  padding: 1px 4px;
+  transition: background 0.15s;
+}
+.title-eyebrow:hover  { background: rgba(255,255,255,0.05); outline: 1px dashed rgba(0,229,255,0.3); }
+.title-eyebrow:focus  { outline: 1px solid rgba(0,229,255,0.6); background: rgba(255,255,255,0.07); }
+.title-eyebrow::before, .title-eyebrow::after { content: ''; width: 24px; height: 1px; background: rgba(255,255,255,0.12); flex-shrink:0; }
+.main-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1rem, 4vw, 1.6rem);
+  font-weight: 900; letter-spacing: 0.04em; line-height: 1.18;
+  color: #fff;
+  text-shadow: 0 0 28px rgba(0,229,255,0.22), 0 0 60px rgba(0,229,255,0.08);
+  display: block; transition: color 0.3s, text-shadow 0.3s;
+}
+.title-divider {
+  height: 1px; margin: 10px auto 0; max-width: 75%;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent); opacity: 0.28;
+}
+.sub-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 600;
+  font-size: clamp(0.78rem, 2.2vw, 0.95rem);
+  letter-spacing: 0.08em;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.55);
+  display: block;
+  margin-top: 8px;
+  padding: 0 4px;
+  white-space: pre-wrap;
+  min-height: 1em;
+}
+.sub-title:empty::before {
+  content: 'Click to add subtitle…';
+  color: rgba(255,255,255,0.18);
+  font-style: italic;
+}
+.sub-title:focus { color: rgba(255,255,255,0.75); }
+
+/* Title theme colors */
+.theme-bearish .main-title { color: var(--red);   text-shadow: 0 0 28px rgba(255,61,87,0.4),   0 0 60px rgba(255,61,87,0.12); }
+.theme-bullish .main-title { color: var(--green);  text-shadow: 0 0 28px rgba(0,255,170,0.4),   0 0 60px rgba(0,255,170,0.12); }
+.theme-alert   .main-title { color: var(--gold);   text-shadow: 0 0 28px rgba(255,213,79,0.4),  0 0 60px rgba(255,213,79,0.12); }
+.theme-neutral .main-title { color: var(--cyan);   text-shadow: 0 0 28px rgba(0,229,255,0.4),   0 0 60px rgba(0,229,255,0.12); }
+
+/* ── IMAGE ── */
+.image-section { padding: 10px 18px; position: relative; z-index: 2; flex-shrink: 0; }
+.image-card {
+  width: 100%; border-radius: 10px;
+  border: 1px solid rgba(0,229,255,0.18); overflow: hidden; position: relative;
+  background: rgba(0,0,0,0.4);
+  box-shadow: 0 0 24px rgba(0,229,255,0.08), inset 0 0 30px rgba(0,0,0,0.4);
+  cursor: pointer; transition: box-shadow 0.25s;
+}
+.image-card:hover { box-shadow: 0 0 32px rgba(0,229,255,0.16); }
+.image-card img { width: 100%; display: block; object-fit: cover; max-height: 220px; }
+.img-placeholder {
+  width: 100%; height: 150px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+  color: rgba(0,229,255,0.28);
+  font-family: 'Share Tech Mono', monospace; font-size: 0.62rem; letter-spacing: 0.12em;
+  border: 2px dashed rgba(0,229,255,0.13); border-radius: 8px; cursor: pointer;
+  transition: all 0.2s;
+}
+.img-placeholder:hover { border-color: rgba(0,229,255,0.3); color: rgba(0,229,255,0.55); }
+.img-placeholder .ph-icon { font-size: 1.6rem; opacity: 0.5; }
+.img-overlay {
+  position: absolute; bottom: 0; left: 0; right: 0; height: 50px;
+  background: linear-gradient(0deg, rgba(6,11,24,0.85), transparent); pointer-events: none;
+}
+
+/* ── INSIGHTS ── */
+.insights-section { padding: 6px 18px 10px; position: relative; z-index: 2; flex: 1; }
+.insights-hdr {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 9px;
+}
+.insights-hdr-line { flex: 1; height: 1px; opacity: 0.18; }
+.insights-hdr-line.l { background: linear-gradient(90deg, transparent, var(--cyan)); }
+.insights-hdr-line.r { background: linear-gradient(90deg, var(--cyan), transparent); }
+.insights-lbl { font-family: 'Share Tech Mono', monospace; font-size: 0.55rem; color: rgba(0,229,255,0.4); letter-spacing: 0.18em; }
+
+.insight-item {
+  display: flex; align-items: flex-start; gap: 9px;
+  padding: 8px 12px; border-radius: 7px; margin-bottom: 5px;
+  background: rgba(0,0,0,0.22); border: 1px solid rgba(255,255,255,0.04);
+  position: relative; overflow: hidden; transition: background 0.18s;
+}
+.insight-item::before {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; border-radius: 2px 0 0 2px;
+}
+.insight-item:hover { background: rgba(0,0,0,0.35); }
+.insight-item.cyan::before  { background: var(--cyan);  box-shadow: 0 0 8px rgba(0,229,255,0.6); }
+.insight-item.red::before   { background: var(--red);   box-shadow: 0 0 8px rgba(255,61,87,0.6); }
+.insight-item.gold::before  { background: var(--gold);  box-shadow: 0 0 8px rgba(255,213,79,0.6); }
+.insight-item.green::before { background: var(--green); box-shadow: 0 0 8px rgba(0,255,170,0.5); }
+.insight-icon { font-size: 0.75rem; flex-shrink: 0; margin-top: 2px; }
+.insight-text {
+  font-family: 'Rajdhani', sans-serif; font-weight: 600;
+  font-size: 0.85rem; color: rgba(255,255,255,0.82); letter-spacing: 0.03em; line-height: 1.4;
+}
+
+/* ── SIGNAL BAR ── */
+.signal-bar {
+  margin: 4px 18px 10px; padding: 9px 14px;
+  background: rgba(0,0,0,0.22); border: 1px solid rgba(255,213,79,0.15);
+  border-radius: 7px; display: flex; align-items: center; justify-content: space-between;
+  position: relative; z-index: 2;
+}
+.signal-lbl { font-family: 'Share Tech Mono', monospace; font-size: 1rem; color: rgb(57, 229, 235); letter-spacing: 0.12em; }
+.signal-val { font-family: 'Orbitron', sans-serif; font-size: 1rem; font-weight: 700; padding-left: 20%;}
+.signal-val.bearish { color: var(--red);   text-shadow: var(--glow-r); }
+.signal-val.bullish { color: var(--green); text-shadow: 0 0 14px rgba(0,255,170,0.5); }
+.signal-val.neutral { color: var(--gold);  text-shadow: var(--glow-g); }
+
+/* ── FOOTER ── */
+.card-footer {
+  padding: 8px 22px 14px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-top: 1px solid rgba(0,229,255,0.07); background: rgba(0,0,0,0.15);
+  position: relative; z-index: 2;
+}
+.footer-txt { font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; color: rgb(233, 230, 92); letter-spacing: 0.1em; padding-left: 30px;}
+.footer-dots { display: flex; gap: 3px; }
+.footer-dot  { width: 4px; height: 4px; border-radius: 50%; }
+.footer-dot:nth-child(1) { background: var(--cyan); opacity: 0.6; }
+.footer-dot:nth-child(2) { background: var(--red);  opacity: 0.6; }
+.footer-dot:nth-child(3) { background: var(--gold); opacity: 0.6; }
+
+/* Landscape layout overrides */
+.card-outer.landscape .card { flex-direction: row; flex-wrap: wrap; }
+.card-outer.landscape .brand-header  { width: 100%; }
+.card-outer.landscape .title-section { width: 100%; padding: 10px 22px 6px; }
+.card-outer.landscape .image-section { width: 50%; padding: 0px 0px 0px 18px; }
+.card-outer.landscape .insights-section { width: 50%; padding: 8px 18px 8px 8px; }
+.card-outer.landscape .signal-bar    { width: 100%; }
+.card-outer.landscape .card-footer   { width: 100%; }
+.card-outer.landscape .image-card img { max-height: 180px; }
+
+/* ═══════════════════════════ FORMAT TOOLBAR (selection-aware) ═══════════════════════════ */
+.fmt-bar {
+  position: fixed;
+  display: none;
+  align-items: center;
+  gap: 4px;
+  background: #060e1f;
+  border: 1px solid rgba(0,229,255,0.5);
+  border-radius: 8px;
+  padding: 6px 8px;
+  z-index: 99999;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.85), 0 0 16px rgba(0,229,255,0.1);
+  white-space: nowrap;
+  flex-wrap: nowrap;
+}
+.fmt-bar.active { display: flex; }
+
+/* Separator */
+.fmt-sep {
+  width: 1px; height: 18px;
+  background: rgba(0,229,255,0.2);
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+/* Size controls */
+.fmt-size-wrap {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(0,229,255,0.18);
+  border-radius: 5px;
+  padding: 2px 4px;
+}
+.fmt-size-btn {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  color: var(--cyan);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 1px 5px;
+  border-radius: 3px;
+  transition: background 0.14s;
+  line-height: 1;
+}
+.fmt-size-btn:hover { background: rgba(0,229,255,0.15); }
+.fmt-size-display {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  color: rgba(255,255,255,0.5);
+  min-width: 28px;
+  text-align: center;
+  cursor: default;
+  user-select: none;
+}
+
+/* Preset size pills */
+.fmt-size-pill {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  color: rgba(255,255,255,0.45);
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 4px;
+  padding: 2px 6px;
+  cursor: pointer;
+  transition: all 0.14s;
+}
+.fmt-size-pill:hover { background: rgba(0,229,255,0.12); border-color: rgba(0,229,255,0.3); color: var(--cyan); }
+
+/* Color swatches row */
+.fmt-swatches {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.fmt-sw {
+  width: 18px; height: 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: all 0.12s;
+  flex-shrink: 0;
+}
+.fmt-sw:hover { transform: scale(1.2); border-color: rgba(255,255,255,0.6); }
+.fmt-sw.active { border-color: #fff; box-shadow: 0 0 6px currentColor; }
+
+/* Custom color native picker button */
+.fmt-color-custom {
+  width: 22px; height: 22px;
+  border-radius: 4px;
+  border: 2px dashed rgba(0,229,255,0.4);
+  background: rgba(0,229,255,0.06);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.7rem;
+  transition: all 0.14s;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.fmt-color-custom:hover { border-color: var(--cyan); background: rgba(0,229,255,0.14); }
+.fmt-color-custom input[type=color] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+
+/* Clear/reset btn */
+.fmt-clear {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.55rem;
+  color: rgba(255,61,87,0.7);
+  background: rgba(255,61,87,0.06);
+  border: 1px solid rgba(255,61,87,0.25);
+  border-radius: 4px;
+  padding: 3px 7px;
+  cursor: pointer;
+  transition: all 0.14s;
+  flex-shrink: 0;
+}
+.fmt-clear:hover { background: rgba(255,61,87,0.16); color: var(--red); }
+
+/* Hindi convert button in toolbar */
+.fmt-hindi-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.04em;
+  color: #ffaa00;
+  background: rgba(255,165,0,0.1);
+  border: 1px solid rgba(255,165,0,0.45);
+  border-radius: 5px;
+  padding: 3px 9px;
+  cursor: pointer;
+  transition: all 0.15s;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+.fmt-hindi-btn:hover {
+  background: rgba(255,165,0,0.22);
+  border-color: rgba(255,165,0,0.7);
+  box-shadow: 0 0 10px rgba(255,165,0,0.2);
+}
+.fmt-hindi-btn.loading {
+  opacity: 0.6;
+  cursor: wait;
+  pointer-events: none;
+}
+.fmt-hindi-btn.loading .fmt-hindi-label::after {
+  content: '…';
+}
+.fmt-hindi-icon { font-size: 0.75rem; line-height: 1; }
+.fmt-hindi-label { font-size: 0.7rem; }
+
+/* Hint label inside toolbar */
+.fmt-hint {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.48rem;
+  color: rgba(0,229,255,0.3);
+  letter-spacing: 0.06em;
+  padding: 0 2px;
+  user-select: none;
+}
+
+/* ═══════════════════════════ RESPONSIVE ═══════════════════════════ */
+@media (max-width: 900px) {
+  .app { grid-template-columns: 1fr; grid-template-rows: 52px auto 1fr; overflow-y: auto; height: auto; }
+  html, body { overflow: auto; height: auto; }
+  .editor-panel { grid-row: 2; border-right: none; border-bottom: 1px solid var(--border); overflow-y: visible; }
+  .preview-panel { grid-row: 3; overflow-y: visible; }
+  .card-outer.landscape { width: 100%; }
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══ TOP BAR ═══════════════════════════════════════════ -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <div class="topbar-logo">🔍</div>
+      <div>
+        <div class="topbar-name"><span class="tm">MARKET</span>&nbsp;<span class="ts">SNIFFER</span></div>
+        <div class="topbar-sub">CARD BUILDER STUDIO</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <span class="exp-status" id="expStatus"></span>
+      <span id="saveIndicator" style="font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:rgba(0,255,170,0.5);letter-spacing:0.1em;min-width:60px;"></span>
+      <button class="tb-action cyan" onclick="exportCard('png')">💾 PNG</button>
+      <button class="tb-action gold" onclick="exportCard('jpg')">💾 JPG</button>
+      <button class="tb-action red"  onclick="resetAll()" title="Clear saved data & reset">↺ RESET</button>
+    </div>
+  </header>
+
+  <!-- ═══ LEFT: EDITOR PANEL ═══════════════════════════════ -->
+  <aside class="editor-panel">
+
+    <!-- LAYOUT -->
+    <div class="ed-section">
+      <div class="ed-section-title">FORMAT</div>
+      <div class="layout-pills">
+        <div class="layout-pill active" data-layout="portrait"  onclick="setLayout('portrait',this)">📱<br>9:16<br><span style="opacity:.5;font-size:.5rem">SHORTS</span></div>
+        <div class="layout-pill"        data-layout="landscape" onclick="setLayout('landscape',this)">🖥<br>16:9<br><span style="opacity:.5;font-size:.5rem">YOUTUBE</span></div>
+        <div class="layout-pill"        data-layout="square"    onclick="setLayout('square',this)">⬛<br>1:1<br><span style="opacity:.5;font-size:.5rem">INSTA</span></div>
+      </div>
+    </div>
+
+    <!-- TITLE & THEME -->
+    <div class="ed-section">
+      <div class="ed-section-title">TITLE & SIGNAL</div>
+
+      <div class="ed-row">
+        <div class="ed-group">
+          <div class="ed-label">EYEBROW LABEL</div>
+          <input class="ed-input" id="tb-eyebrow" type="text" value="MARKET INTELLIGENCE" placeholder="Small label above title…"/>
+        </div>
+      </div>
+
+      <div class="ed-row">
+        <div class="ed-group">
+          <div class="ed-label">MAIN TITLE</div>
+          <input class="ed-input" id="tb-title" type="text" value="FII HEAVILY SHORTING MARKET" placeholder="Card headline…"/>
+        </div>
+      </div>
+
+      <div class="ed-row">
+        <div class="ed-group">
+          <div class="ed-label">SUBTITLE / MULTI-LINE CAPTION</div>
+          <textarea class="ed-input" id="tb-subtitle" rows="3" placeholder="Optional subtitle or extra context…&#10;Line 2 here…&#10;Line 3 here…" style="resize:vertical;min-height:64px;font-family:'Rajdhani',sans-serif;"></textarea>
+        </div>
+      </div>
+
+      <div class="ed-row" style="margin-bottom:10px;">
+        <div class="ed-group">
+          <div class="ed-label">SIGNAL THEME</div>
+          <div class="theme-pills">
+            <div class="theme-pill active" data-theme="theme-bearish" onclick="setTheme('theme-bearish',this)">🔴<br>BEAR</div>
+            <div class="theme-pill"        data-theme="theme-bullish" onclick="setTheme('theme-bullish',this)">🟢<br>BULL</div>
+            <div class="theme-pill"        data-theme="theme-alert"   onclick="setTheme('theme-alert',this)">🟡<br>ALERT</div>
+            <div class="theme-pill"        data-theme="theme-neutral" onclick="setTheme('theme-neutral',this)">🔵<br>NEUT</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ed-row">
+        <div class="ed-group">
+          <div class="ed-label">SIGNAL LABEL</div>
+          <input class="ed-input" id="tb-sig-label" type="text" value="MARKET BIAS"/>
+        </div>
+        <div class="ed-group narrow">
+          <div class="ed-label">SIGNAL</div>
+          <select class="ed-select" id="tb-sig-val">
+            <option value="bearish">BEARISH</option>
+            <option value="bullish">BULLISH</option>
+            <option value="neutral">NEUTRAL</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="ed-row">
+        <div class="ed-group">
+          <div class="ed-label">DATE BADGE</div>
+          <input class="ed-input" id="tb-date" type="text" value="8 MAR 2026"/>
+        </div>
+        <!-- <div class="ed-group">
+          <div class="ed-label">SUB-BADGE</div>
+          <input class="ed-input" id="tb-badge" type="text" value="SMART MONEY"/>
+        </div> -->
+      </div>
+    </div>
+
+    <!-- IMAGE -->
+    <div class="ed-section">
+      <div class="ed-section-title">IMAGE</div>
+      <div class="ed-row">
+        <div class="ed-group">
+          <div class="ed-label">IMAGE URL</div>
+          <input class="ed-input" id="tb-img" type="text" placeholder="https://… or upload ↓"/>
+        </div>
+      </div>
+      <div class="ed-row">
+        <button class="ed-btn" onclick="document.getElementById('imgUpload').click()" style="flex:1;">📁 Upload Image</button>
+        <button class="ed-btn danger" onclick="clearImage()" style="flex:1;">✕ Clear</button>
+      </div>
+      <input type="file" id="imgUpload" accept="image/*" style="display:none"/>
+    </div>
+
+    <!-- INSIGHTS -->
+    <div class="ed-section">
+      <div class="ed-section-title">INSIGHTS</div>
+
+      <div id="insightEditors"></div>
+
+      <button class="ed-btn" onclick="addInsight()" style="width:100%;margin-top:6px;">+ ADD INSIGHT</button>
+    </div>
+
+    <!-- ROMAN → HINDI TRANSLITERATION -->
+    <div class="ed-section" id="hindiSection">
+      <div class="ed-section-title">🇮🇳 ROMAN → HINDI</div>
+
+      <div style="font-family:'Share Tech Mono',monospace;font-size:0.52rem;color:rgba(0,229,255,0.35);letter-spacing:0.06em;margin-bottom:10px;line-height:1.6;">
+        Type Roman → get Hindi script<br/>
+        <span style="color:rgba(255,255,255,0.25);">e.g. "Bhari" → भारी &nbsp;·&nbsp; "Nifty" → निफ्टी</span>
+      </div>
+
+      <!-- Input -->
+      <div class="ed-row">
+        <div class="ed-group">
+          <div class="ed-label">TYPE IN ROMAN (ENGLISH LETTERS)</div>
+          <input class="ed-input" id="hindiRoman" type="text"
+            placeholder="e.g. Bhari giravat aayegi…"
+            style="font-size:0.9rem;"
+            autocomplete="off" autocorrect="off" spellcheck="false"/>
+        </div>
+      </div>
+
+      <div class="ed-row" style="margin-top:2px;">
+        <button class="ed-btn" id="hindiTranslitBtn" onclick="doTranslit()" style="flex:1;background:rgba(255,165,0,0.1);border-color:rgba(255,165,0,0.4);color:#ffaa00;">
+          ⇄ CONVERT TO HINDI
+        </button>
+        <button class="ed-btn danger" onclick="hindiClearAll()" style="flex:0 0 60px;">CLEAR</button>
+      </div>
+
+      <div id="hindiStatus" style="font-family:'Share Tech Mono',monospace;font-size:0.55rem;color:rgba(0,229,255,0.35);letter-spacing:0.06em;min-height:14px;margin:6px 0 2px;"></div>
+
+      <!-- Suggestions row (multiple transliteration options) -->
+      <div id="hindiSuggestions" style="display:none;margin-bottom:8px;">
+        <div class="ed-label" style="margin-bottom:5px;">SUGGESTIONS — click to select</div>
+        <div id="hindiSugList" style="display:flex;flex-wrap:wrap;gap:5px;"></div>
+      </div>
+
+      <!-- Result -->
+      <div id="hindiResultWrap" style="display:none;">
+        <div class="ed-label" style="margin-bottom:4px;">HINDI OUTPUT</div>
+        <div id="hindiResult"
+          style="background:rgba(255,165,0,0.05);border:1px solid rgba(255,165,0,0.3);border-radius:6px;
+                 padding:10px 14px;font-size:1.35rem;line-height:1.7;color:#fff;
+                 min-height:44px;word-break:break-word;user-select:all;cursor:text;
+                 font-family:'Rajdhani',sans-serif;"></div>
+
+        <!-- Action buttons -->
+        <div style="display:flex;gap:5px;margin-top:7px;flex-wrap:wrap;">
+          <button class="ed-btn" onclick="hindiCopy()" style="flex:1;min-width:70px;">📋 COPY</button>
+          <button class="ed-btn" onclick="hindiToTitle()" style="flex:1;min-width:70px;" title="Set as main title">→ TITLE</button>
+          <button class="ed-btn" onclick="hindiToSubtitle()" style="flex:1;min-width:70px;" title="Set as subtitle">→ SUBTITLE</button>
+          <button class="ed-btn" onclick="hindiToInsight()" style="flex:1;min-width:70px;" title="Add as insight">→ INSIGHT</button>
+        </div>
+        <div id="hindiCopyMsg" style="font-family:'Share Tech Mono',monospace;font-size:0.5rem;color:var(--green);text-align:center;min-height:14px;margin-top:3px;"></div>
+      </div>
+    </div>
+
+    <!-- FOOTER TEXT -->
+    <div class="ed-section">
+      <div class="ed-section-title">FOOTER</div>
+      <div class="ed-row">
+        <div class="ed-group">
+          <div class="ed-label">FOOTER TEXT</div>
+          <input class="ed-input" id="tb-footer" type="text" value="For educational purposes only"/>
+        </div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ═══ RIGHT: PREVIEW PANEL ════════════════════════════ -->
+  <main class="preview-panel">
+    <div class="preview-label">LIVE PREVIEW</div>
+
+    <!-- CARD OUTER (this is exported) -->
+    <div class="card-outer portrait theme-bearish" id="cardOuter">
+    <div class="card" id="exportCard">
+
+      <!-- BRAND HEADER -->
+      <div class="brand-header">
+        <div class="brand-left">
+          <div class="brand-icon">🔍</div>
+          <div class="brand-text">
+            <span class="brand-the">T H E</span>
+            <div class="brand-name">
+              <span class="bm" contenteditable="true" spellcheck="false">MARKET</span>
+              <span class="bs" contenteditable="true" spellcheck="false">SNIFFER</span>
+            </div>
+          </div>
+        </div>
+        <div class="brand-right">
+          <span class="brand-date" id="dateEl">8 MAR 2026</span>
+          <!-- <span class="brand-badge" id="badgeEl">SMART MONEY</span> -->
+        </div>
+      </div>
+
+      <!-- TITLE -->
+      <div class="title-section">
+        <div class="title-eyebrow" id="eyebrowEl" contenteditable="true" spellcheck="false">MARKET INTELLIGENCE</div>
+        <span class="main-title" id="titleEl" contenteditable="true" spellcheck="false">FII HEAVILY SHORTING MARKET</span>
+        <span class="sub-title" id="subtitleEl" contenteditable="true" spellcheck="false"></span>
+        <div class="title-divider"></div>
+      </div>
+
+      <!-- IMAGE -->
+      <div class="image-section">
+        <div class="image-card" id="imageCard" onclick="document.getElementById('imgUpload').click()">
+          <div class="img-placeholder" id="imgPlaceholder">
+            <div class="ph-icon">🖼</div>
+            <span>CLICK TO UPLOAD IMAGE</span>
+          </div>
+          <img id="imgEl" src="" alt="" style="display:none"/>
+          <div class="img-overlay"></div>
+        </div>
+      </div>
+
+      <!-- INSIGHTS -->
+      <div class="insights-section">
+        <div class="insights-hdr">
+          <div class="insights-hdr-line l"></div>
+          <span class="insights-lbl">KEY INSIGHTS</span>
+          <div class="insights-hdr-line r"></div>
+        </div>
+        <div id="insightsList"></div>
+      </div>
+
+      <!-- SIGNAL -->
+      <div class="signal-bar">
+        <span class="signal-lbl" id="signalLblEl">MARKET SENTIMENT:</span>  
+        <span class="signal-val bearish" id="signalValEl">BEARISH</span>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="card-footer">
+        <span class="footer-txt" id="footerTxtEl">For educational purposes only</span>
+        <div class="footer-dots">
+          <div class="footer-dot"></div>
+          <div class="footer-dot"></div>
+          <div class="footer-dot"></div>
+        </div>
+      </div>
+
+    </div><!-- .card -->
+    </div><!-- .card-outer -->
+
+  </main><!-- .preview-panel -->
+
+</div><!-- .app -->
+
+<!-- ═══ RICH FORMAT TOOLBAR (appears on text selection) ═══ -->
+<div class="fmt-bar" id="fmtBar">
+
+  <!-- Font size controls -->
+  <div class="fmt-size-wrap">
+    <button class="fmt-size-btn" id="fmtSizeDown" title="Decrease font size">A−</button>
+    <span class="fmt-size-display" id="fmtSizeDisplay">–</span>
+    <button class="fmt-size-btn" id="fmtSizeUp" title="Increase font size">A+</button>
+  </div>
+
+  <!-- Preset sizes -->
+  <div class="fmt-size-pill" onclick="applyFontSize(12)" title="12px">XS</div>
+  <div class="fmt-size-pill" onclick="applyFontSize(14)" title="14px">S</div>
+  <div class="fmt-size-pill" onclick="applyFontSize(18)" title="18px">M</div>
+  <div class="fmt-size-pill" onclick="applyFontSize(24)" title="24px">L</div>
+  <div class="fmt-size-pill" onclick="applyFontSize(32)" title="32px">XL</div>
+  <div class="fmt-size-pill" onclick="applyFontSize(48)" title="48px">2X</div>
+
+  <div class="fmt-sep"></div>
+
+  <!-- Color swatches -->
+  <div class="fmt-swatches">
+    <div class="fmt-sw" data-color="#00e5ff" style="background:#00e5ff" title="Cyan"></div>
+    <div class="fmt-sw" data-color="#ff3d57" style="background:#ff3d57" title="Red"></div>
+    <div class="fmt-sw" data-color="#ffd54f" style="background:#ffd54f" title="Gold"></div>
+    <div class="fmt-sw" data-color="#00ffaa" style="background:#00ffaa" title="Green"></div>
+    <div class="fmt-sw" data-color="#ffffff" style="background:#ffffff" title="White"></div>
+    <div class="fmt-sw" data-color="#ff6b6b" style="background:#ff6b6b" title="Coral"></div>
+    <div class="fmt-sw" data-color="#ff9500" style="background:#ff9500" title="Orange"></div>
+    <div class="fmt-sw" data-color="#bf5fff" style="background:#bf5fff" title="Purple"></div>
+    <div class="fmt-sw" data-color="#aaaaaa" style="background:#aaaaaa" title="Gray"></div>
+    <!-- Custom color picker -->
+    <div class="fmt-color-custom" title="Custom color">
+      🎨
+      <input type="color" id="fmtColorNative" value="#00e5ff"/>
+    </div>
+  </div>
+
+  <div class="fmt-sep"></div>
+
+  <!-- Hindi convert button -->
+  <button class="fmt-hindi-btn" id="fmtHindiBtn" title="Convert selected Roman text → Hindi script">
+    <span class="fmt-hindi-icon">🇮🇳</span>
+    <span class="fmt-hindi-label">→ हिं</span>
+  </button>
+
+  <div class="fmt-sep"></div>
+
+  <!-- Clear formatting -->
+  <div class="fmt-clear" id="fmtClear" title="Remove color & size from selection">✕ CLEAR</div>
+
+</div>
+
+<!-- ═══════════════════ JAVASCRIPT ═══════════════════ -->
+<script>
+// ══════════════════════════════════════════════════════════
+// LOCAL STORAGE PERSISTENCE
+// ══════════════════════════════════════════════════════════
+const LS_KEY = 'tms_card_v1';
+
+function saveState() {
+  try {
+    const state = {
+      eyebrow  : document.getElementById('tb-eyebrow').value,
+      title    : document.getElementById('tb-title').value,
+      subtitle : document.getElementById('tb-subtitle').value,
+      date     : document.getElementById('tb-date').value,
+      footer   : document.getElementById('tb-footer').value,
+      signal   : document.getElementById('tb-sig-val').value,
+      theme    : (document.getElementById('cardOuter').className.match(/theme-\w+/) || ['theme-bearish'])[0],
+      layout   : (document.getElementById('cardOuter').className.match(/portrait|landscape|square/) || ['portrait'])[0],
+      insights : insights,
+      // save rich HTML of card text elements (preserves spans with color/size)
+      titleHTML    : document.getElementById('titleEl').innerHTML,
+      eyebrowHTML  : document.getElementById('eyebrowEl').innerHTML,
+      subtitleHTML : document.getElementById('subtitleEl').innerHTML,
+      footerHTML   : document.getElementById('footerTxtEl').innerHTML,
+      imgSrc       : document.getElementById('imgEl').src || '',
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(state));
+  } catch(e) { /* storage full or private mode */ }
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function applyState(s) {
+  if (!s) return;
+
+  // Editor inputs
+  if (s.eyebrow  !== undefined) document.getElementById('tb-eyebrow').value  = s.eyebrow;
+  if (s.title    !== undefined) document.getElementById('tb-title').value     = s.title;
+  if (s.subtitle !== undefined) document.getElementById('tb-subtitle').value  = s.subtitle;
+  if (s.date     !== undefined) document.getElementById('tb-date').value      = s.date;
+  if (s.footer   !== undefined) document.getElementById('tb-footer').value    = s.footer;
+
+  // Signal select
+  if (s.signal) {
+    document.getElementById('tb-sig-val').value = s.signal;
+    const sv = document.getElementById('signalValEl');
+    sv.textContent = s.signal.toUpperCase();
+    sv.className   = `signal-val ${s.signal}`;
+  }
+
+  // Theme
+  if (s.theme) {
+    const outer = document.getElementById('cardOuter');
+    outer.className = outer.className.replace(/theme-\w+/, s.theme);
+    document.querySelectorAll('.theme-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.theme === s.theme);
+    });
+  }
+
+  // Layout
+  if (s.layout) {
+    const outer = document.getElementById('cardOuter');
+    outer.className = outer.className.replace(/portrait|landscape|square/, s.layout);
+    document.querySelectorAll('.layout-pill').forEach(p => {
+      p.classList.toggle('active', p.dataset.layout === s.layout);
+    });
+  }
+
+  // Insights data
+  if (s.insights && Array.isArray(s.insights)) {
+    insights = s.insights;
+  }
+
+  // Rich card HTML (spans with color/size survive refresh)
+  if (s.titleHTML)    document.getElementById('titleEl').innerHTML    = s.titleHTML;
+  if (s.eyebrowHTML)  document.getElementById('eyebrowEl').innerHTML  = s.eyebrowHTML;
+  if (s.subtitleHTML) {
+    const sub = document.getElementById('subtitleEl');
+    sub.innerHTML    = s.subtitleHTML;
+    sub.style.display = sub.textContent.trim() ? 'block' : 'none';
+  }
+  if (s.footerHTML)   document.getElementById('footerTxtEl').innerHTML = s.footerHTML;
+
+  // Image
+  if (s.imgSrc && s.imgSrc.length > 4) {
+    setImageSrc(s.imgSrc);
+  }
+}
+
+// Debounced auto-save — fires 800ms after last change
+let saveTimer = null;
+function scheduleSave() {
+  const ind = document.getElementById('saveIndicator');
+  if (ind) ind.textContent = '● SAVING…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => {
+    saveState();
+    if (ind) { ind.textContent = '✓ SAVED'; setTimeout(() => ind.textContent = '', 2000); }
+  }, 800);
+}
+
+// ── INSIGHT DATA ─────────────────────────────────────────
+const ICONS  = { cyan:'◈', red:'▼', gold:'◆', green:'▲' };
+const COLORS = { cyan:'#00e5ff', red:'#ff3d57', gold:'#ffd54f', green:'#00ffaa' };
+
+let insights = [
+  { text: 'FII aggressive call writing at 25,000 CE', color: 'red'  },
+  { text: 'Strong put base near 24,000 — key support', color: 'green' },
+  { text: 'Max pain shifting towards 24,600 — gravity zone', color: 'gold' },
+  { text: 'Expect high volatility near expiry — stay cautious', color: 'red' },
+];
+
+// ── RENDER INSIGHT EDITORS ───────────────────────────────
+function renderEditors() {
+  const wrap = document.getElementById('insightEditors');
+  wrap.innerHTML = '';
+  insights.forEach((ins, i) => {
+    const row = document.createElement('div');
+    row.className = 'insight-editor-row';
+    row.innerHTML = `
+      <input class="ed-input" value="${ins.text.replace(/"/g,'&quot;')}"
+        oninput="insights[${i}].text=this.value; renderCard(); scheduleSave()"/>
+      <div style="display:flex;align-items:center;gap:4px;">
+        ${['cyan','red','gold','green'].map(c=>`
+          <div class="ic-dot ${ins.color===c?'active':''}"
+            style="background:${COLORS[c]}"
+            onclick="insights[${i}].color='${c}';renderEditors();renderCard();scheduleSave()">
+          </div>`).join('')}
+        <div class="ic-dot" style="background:rgba(255,61,87,0.4);color:#ff3d57;border:1px solid rgba(255,61,87,0.4);display:flex;align-items:center;justify-content:center;font-size:0.65rem;"
+          onclick="removeInsight(${i})">✕</div>
+      </div>
+    `;
+    wrap.appendChild(row);
+  });
+}
+
+function addInsight() {
+  insights.push({ text: 'New insight here', color: 'cyan' });
+  renderEditors(); renderCard(); scheduleSave();
+}
+
+function removeInsight(i) {
+  insights.splice(i,1);
+  renderEditors(); renderCard(); scheduleSave();
+}
+
+// ── RENDER CARD INSIGHTS ─────────────────────────────────
+function renderCard() {
+  const list = document.getElementById('insightsList');
+  list.innerHTML = '';
+  insights.forEach(ins => {
+    if (!ins.text.trim()) return;
+    const el = document.createElement('div');
+    el.className = `insight-item ${ins.color}`;
+    el.innerHTML = `
+      <span class="insight-icon">${ICONS[ins.color]||'◈'}</span>
+      <span class="insight-text" contenteditable="true" spellcheck="false">${ins.text}</span>
+    `;
+    list.appendChild(el);
+  });
+  attachEditable();
+}
+
+// ── LAYOUT ───────────────────────────────────────────────
+function setLayout(layout, el) {
+  const outer = document.getElementById('cardOuter');
+  outer.className = outer.className.replace(/portrait|landscape|square/, layout);
+  document.querySelectorAll('.layout-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  scheduleSave();
+}
+
+// ── THEME ────────────────────────────────────────────────
+function setTheme(theme, el) {
+  const outer = document.getElementById('cardOuter');
+  outer.className = outer.className.replace(/theme-\w+/, theme);
+  document.querySelectorAll('.theme-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  scheduleSave();
+}
+
+// ── LIVE INPUTS ──────────────────────────────────────────
+function bindInput(id, fn) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener('input', fn);
+}
+
+bindInput('tb-eyebrow', () => {
+  document.getElementById('eyebrowEl').textContent = document.getElementById('tb-eyebrow').value;
+  scheduleSave();
+});
+bindInput('tb-title', () => {
+  document.getElementById('titleEl').textContent = document.getElementById('tb-title').value;
+  scheduleSave();
+});
+bindInput('tb-subtitle', () => {
+  const el = document.getElementById('subtitleEl');
+  el.textContent = document.getElementById('tb-subtitle').value;
+  el.style.display = el.textContent.trim() ? 'block' : 'none';
+  scheduleSave();
+});
+bindInput('tb-date', () => {
+  document.getElementById('dateEl').textContent = document.getElementById('tb-date').value;
+  scheduleSave();
+});
+bindInput('tb-badge', () => {
+  const el = document.getElementById('badgeEl');
+  if (el) el.textContent = document.getElementById('tb-badge').value;
+  scheduleSave();
+});
+bindInput('tb-sig-label', () => {
+  const el = document.getElementById('signalLblEl');
+  if (el) el.textContent = document.getElementById('tb-sig-label').value;
+  scheduleSave();
+});
+bindInput('tb-footer', () => {
+  document.getElementById('footerTxtEl').textContent = document.getElementById('tb-footer').value;
+  scheduleSave();
+});
+document.getElementById('tb-sig-val').addEventListener('change', () => {
+  const v = document.getElementById('tb-sig-val').value;
+  const el = document.getElementById('signalValEl');
+  el.textContent = v.toUpperCase();
+  el.className = `signal-val ${v}`;
+  scheduleSave();
+});
+bindInput('tb-img', () => {
+  const v = document.getElementById('tb-img').value.trim();
+  if (v) setImageSrc(v);
+  scheduleSave();
+});
+
+// ── IMAGE ────────────────────────────────────────────────
+function setImageSrc(src) {
+  const img = document.getElementById('imgEl');
+  const ph  = document.getElementById('imgPlaceholder');
+  img.src = src; img.style.display = 'block'; ph.style.display = 'none';
+}
+// legacy alias
+function setImage(src) { setImageSrc(src); }
+
+function clearImage() {
+  document.getElementById('imgEl').style.display = 'none';
+  document.getElementById('imgPlaceholder').style.display = 'flex';
+  document.getElementById('imgEl').src = '';
+  document.getElementById('tb-img').value = '';
+  scheduleSave();
+}
+document.getElementById('imgUpload').addEventListener('change', function() {
+  if (!this.files[0]) return;
+  const r = new FileReader();
+  r.onload = e => { setImageSrc(e.target.result); scheduleSave(); };
+  r.readAsDataURL(this.files[0]);
+});
+
+// ── INLINE EDIT ──────────────────────────────────────────
+function attachEditable() {
+  document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+    if (el.dataset.bound) return;
+    el.dataset.bound = '1';
+    el.addEventListener('input', () => scheduleSave());
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey && el.id !== 'subtitleEl') {
+        e.preventDefault(); el.blur();
+      }
+    });
+  });
+}
+
+// ═══════════════════════════════════════════════════════
+// RICH FORMAT TOOLBAR — selection-based color & font size
+// ═══════════════════════════════════════════════════════
+const fmtBar       = document.getElementById('fmtBar');
+const fmtSizeUp    = document.getElementById('fmtSizeUp');
+const fmtSizeDown  = document.getElementById('fmtSizeDown');
+const fmtSizeDisp  = document.getElementById('fmtSizeDisplay');
+const fmtColorNat  = document.getElementById('fmtColorNative');
+const fmtClear     = document.getElementById('fmtClear');
+
+let savedRange = null;  // preserved selection when toolbar is clicked
+let activeEditEl = null;
+
+// ── Positioning ──────────────────────────────────────────
+function positionFmtBar(rect) {
+  const barW = 560; // approx toolbar width
+  let x = rect.left + window.scrollX + rect.width / 2 - barW / 2;
+  let y = rect.top  + window.scrollY - 52;
+  x = Math.max(8, Math.min(x, window.innerWidth - barW - 8));
+  if (y < 60) y = rect.bottom + window.scrollY + 8;
+  fmtBar.style.left = x + 'px';
+  fmtBar.style.top  = y + 'px';
+}
+
+// ── Show / hide ──────────────────────────────────────────
+function showFmtBar(sel) {
+  const range = sel.getRangeAt(0);
+  const rect  = range.getBoundingClientRect();
+  if (!rect.width) { hideFmtBar(); return; }
+  savedRange = range.cloneRange();
+  positionFmtBar(rect);
+  fmtBar.classList.add('active');
+  updateSizeDisplay();
+}
+function hideFmtBar() {
+  fmtBar.classList.remove('active');
+}
+
+// ── Restore saved selection ───────────────────────────────
+function restoreSel() {
+  if (!savedRange) return false;
+  const sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(savedRange);
+  return true;
+}
+
+// ── Read current font size of selection ───────────────────
+function getCurrentFontSize() {
+  if (!savedRange) return null;
+  // Check the start container for an existing span with font-size
+  let node = savedRange.startContainer;
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+  while (node && node.getAttribute && !node.getAttribute('contenteditable')) {
+    const fs = node.style && node.style.fontSize;
+    if (fs) return parseFloat(fs);
+    node = node.parentElement;
+  }
+  // Fall back to computed style of activeEditEl
+  if (activeEditEl) {
+    return parseFloat(window.getComputedStyle(activeEditEl).fontSize);
+  }
+  return 16;
+}
+
+function updateSizeDisplay() {
+  const sz = getCurrentFontSize();
+  fmtSizeDisp.textContent = sz ? Math.round(sz) + 'px' : '–';
+}
+
+// ── Apply font size to selection ──────────────────────────
+function applyFontSize(px) {
+  if (!restoreSel()) return;
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) return;
+  wrapSelectionWithSpan({ fontSize: px + 'px' });
+  savedRange = sel.getRangeAt(0).cloneRange();
+  updateSizeDisplay();
+  scheduleSave();
+}
+
+// ── Apply color to selection ──────────────────────────────
+function applyColor(hex) {
+  if (!restoreSel()) return;
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) return;
+  wrapSelectionWithSpan({ color: hex, textShadow: `0 0 12px ${hex}99` });
+  savedRange = sel.getRangeAt(0).cloneRange();
+  document.querySelectorAll('.fmt-sw').forEach(s => {
+    s.classList.toggle('active', s.dataset.color === hex);
+  });
+  scheduleSave();
+}
+
+// ── Core: wrap current selection in a <span> with given styles ──
+function wrapSelectionWithSpan(styles) {
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) return;
+  const range = sel.getRangeAt(0);
+
+  // If selection is already fully inside a single styled span, update it
+  let container = range.commonAncestorContainer;
+  if (container.nodeType === Node.TEXT_NODE) container = container.parentElement;
+
+  // Create new span
+  const span = document.createElement('span');
+  Object.assign(span.style, styles);
+
+  try {
+    range.surroundContents(span);
+  } catch (e) {
+    // surroundContents fails on partial selections across elements
+    // Extract and re-wrap
+    const frag = range.extractContents();
+    span.appendChild(frag);
+    range.insertNode(span);
+  }
+
+  // Re-select the span content
+  const newRange = document.createRange();
+  newRange.selectNodeContents(span);
+  sel.removeAllRanges();
+  sel.addRange(newRange);
+  savedRange = newRange.cloneRange();
+}
+
+// ── Clear formatting from selection ───────────────────────
+function clearFormatting() {
+  if (!restoreSel()) return;
+  const sel = window.getSelection();
+  if (!sel.rangeCount || sel.isCollapsed) return;
+  const range = sel.getRangeAt(0);
+
+  // Walk all spans inside selection and strip style
+  const ancestor = range.commonAncestorContainer.nodeType === Node.TEXT_NODE
+    ? range.commonAncestorContainer.parentElement
+    : range.commonAncestorContainer;
+
+  ancestor.querySelectorAll('span[style]').forEach(span => {
+    // Only clear if intersects selection
+    const sr = document.createRange();
+    sr.selectNodeContents(span);
+    if (range.compareBoundaryPoints(Range.END_TO_START, sr) < 1 &&
+        range.compareBoundaryPoints(Range.START_TO_END, sr) > -1) {
+      // Unwrap the span
+      while (span.firstChild) span.parentNode.insertBefore(span.firstChild, span);
+      span.parentNode.removeChild(span);
+    }
+  });
+  document.querySelectorAll('.fmt-sw').forEach(s => s.classList.remove('active'));
+  updateSizeDisplay();
+}
+
+// ── Size +/- buttons ──────────────────────────────────────
+fmtSizeUp.addEventListener('mousedown', e => {
+  e.preventDefault(); // don't lose selection
+  const cur = getCurrentFontSize() || 16;
+  applyFontSize(Math.min(120, cur + 2));
+});
+fmtSizeDown.addEventListener('mousedown', e => {
+  e.preventDefault();
+  const cur = getCurrentFontSize() || 16;
+  applyFontSize(Math.max(8, cur - 2));
+});
+
+// ── Swatch clicks ─────────────────────────────────────────
+document.querySelectorAll('.fmt-sw').forEach(sw => {
+  sw.addEventListener('mousedown', e => {
+    e.preventDefault();
+    applyColor(sw.dataset.color);
+  });
+});
+
+// ── Custom color native picker ────────────────────────────
+fmtColorNat.addEventListener('input', () => {
+  applyColor(fmtColorNat.value);
+});
+// prevent the picker click from collapsing selection
+fmtColorNat.parentElement.addEventListener('mousedown', e => e.preventDefault());
+
+// ── Preset size pills ─────────────────────────────────────
+document.querySelectorAll('.fmt-size-pill').forEach(pill => {
+  pill.addEventListener('mousedown', e => e.preventDefault());
+});
+
+// ── Clear button ─────────────────────────────────────────
+fmtClear.addEventListener('mousedown', e => {
+  e.preventDefault();
+  clearFormatting();
+});
+
+// ── Hindi convert button in toolbar ──────────────────────
+const fmtHindiBtn = document.getElementById('fmtHindiBtn');
+
+fmtHindiBtn.addEventListener('mousedown', e => {
+  e.preventDefault(); // keep selection alive
+});
+
+fmtHindiBtn.addEventListener('click', async () => {
+  if (!savedRange) return;
+
+  // Get the plain text of the selection
+  const selText = savedRange.toString().trim();
+  if (!selText) return;
+
+  const labelEl = fmtHindiBtn.querySelector('.fmt-hindi-label');
+  const origLabel = labelEl.textContent;
+
+  // Show loading state
+  fmtHindiBtn.classList.add('loading');
+  labelEl.textContent = '→ ';
+
+  try {
+    // Call Google Input Tools API
+    const encoded = encodeURIComponent(selText);
+    const url = `https://inputtools.google.com/request?text=${encoded}&itc=hi-t-i0-und&num=1&cp=0&cs=1&ie=utf-8&oe=utf-8&app=demopage`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    let hindi = '';
+    if (data && data[0] === 'SUCCESS' && data[1]) {
+      // data[1] = [[word, [suggestion1, suggestion2...]], ...]
+      hindi = data[1].map(r => (r[1] && r[1][0]) || r[0]).join(' ');
+    } else {
+      // offline fallback
+      hindi = basicTranslit(selText);
+    }
+
+    if (!hindi) throw new Error('empty result');
+
+    // Restore the selection and replace it with Hindi text
+    restoreSel();
+    const sel = window.getSelection();
+    if (sel.rangeCount) {
+      const range = sel.getRangeAt(0);
+      range.deleteContents();
+      const textNode = document.createTextNode(hindi);
+      range.insertNode(textNode);
+
+      // Move cursor to end of inserted text
+      const newRange = document.createRange();
+      newRange.setStartAfter(textNode);
+      newRange.collapse(true);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      savedRange = null;
+    }
+
+    scheduleSave();
+    hideFmtBar();
+
+  } catch(err) {
+    console.error('Hindi toolbar error:', err);
+    // Try offline fallback
+    try {
+      restoreSel();
+      const sel = window.getSelection();
+      if (sel.rangeCount) {
+        const range = sel.getRangeAt(0);
+        const fallback = basicTranslit(selText);
+        range.deleteContents();
+        const textNode = document.createTextNode(fallback);
+        range.insertNode(textNode);
+        const newRange = document.createRange();
+        newRange.setStartAfter(textNode);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+        savedRange = null;
+      }
+      scheduleSave();
+      hideFmtBar();
+    } catch(e2) { /* silent */ }
+  } finally {
+    fmtHindiBtn.classList.remove('loading');
+    labelEl.textContent = origLabel;
+  }
+});
+
+// ── Monitor selection changes ─────────────────────────────
+document.addEventListener('selectionchange', () => {
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed || !sel.rangeCount) {
+    // Don't hide if mouse is over toolbar
+    if (!fmtBar.matches(':hover')) hideFmtBar();
+    return;
+  }
+
+  // Check if selection is inside a contenteditable on the card
+  const range = sel.getRangeAt(0);
+  let node = range.commonAncestorContainer;
+  if (node.nodeType === Node.TEXT_NODE) node = node.parentElement;
+
+  const editable = node.closest('[contenteditable="true"]');
+  const inCard   = node.closest('#exportCard');
+
+  if (editable && inCard) {
+    activeEditEl = editable;
+    showFmtBar(sel);
+  } else {
+    if (!fmtBar.matches(':hover')) hideFmtBar();
+  }
+});
+
+// Hide toolbar when clicking outside card
+document.addEventListener('mousedown', e => {
+  if (!fmtBar.contains(e.target) && !e.target.closest('#exportCard')) {
+    hideFmtBar();
+  }
+});
+
+function rgbToHex(rgb) {
+  const m = rgb.match(/\d+/g);
+  if (!m || m.length < 3) return null;
+  return '#' + m.slice(0,3).map(x => parseInt(x).toString(16).padStart(2,'0')).join('');
+}
+
+// ── EXPORT ───────────────────────────────────────────────
+async function exportCard(fmt) {
+  const status = document.getElementById('expStatus');
+  hideFmtBar();
+  status.textContent = '⏳ Generating…';
+
+  // Temporarily remove contenteditable so no focus outlines appear
+  const editables = document.querySelectorAll('#exportCard [contenteditable]');
+  editables.forEach(el => el.removeAttribute('contenteditable'));
+
+  try {
+    const el = document.getElementById('exportCard');
+    const rect = el.getBoundingClientRect();
+    if (!rect.width || !rect.height) throw new Error('Card has no dimensions');
+
+    const canvas = await html2canvas(el, {
+      backgroundColor : '#0a1020',
+      scale           : 2,
+      logging         : false,
+      useCORS         : true,
+      allowTaint      : true,
+      width           : Math.round(rect.width),
+      height          : Math.round(rect.height),
+      onclone(cloneDoc) {
+        // Kill EVERY pseudo-element — these crash html2canvas (createPattern 0x0 bug)
+        const s = cloneDoc.createElement('style');
+        s.textContent = `
+          *, *::before, *::after {
+            animation: none !important;
+            transition: none !important;
+          }
+          *::before, *::after {
+            display: none !important;
+            content: none !important;
+            background-image: none !important;
+            background: none !important;
+          }
+          .card {
+            box-shadow: none !important;
+            border: 1px solid rgba(0,229,255,0.22) !important;
+            background: linear-gradient(155deg,#0c1330 0%,#060b18 55%,#0a1020 100%) !important;
+          }
+          .card-outer, .preview-panel { background: transparent !important; }
+          .brand-icon, .image-card, .signal-bar { box-shadow: none !important; }
+          .insights-hdr-line { background: rgba(0,229,255,0.18) !important; }
+          [contenteditable] { outline: none !important; border: none !important; }
+          .title-divider {
+            background: linear-gradient(90deg,transparent,#00e5ff,transparent) !important;
+            height: 1px !important;
+          }
+        `;
+        cloneDoc.head.appendChild(s);
+      }
+    });
+
+    if (!canvas.width || !canvas.height) throw new Error('Canvas is empty');
+
+    const mime = fmt === 'png' ? 'image/png' : 'image/jpeg';
+    const blob = await new Promise((res, rej) =>
+      canvas.toBlob(b => b ? res(b) : rej(new Error('toBlob null')), mime, 0.96)
+    );
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement('a'), {
+      href: url, download: `market-sniffer-${Date.now()}.${fmt}`
+    });
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    status.textContent = `✓ ${fmt.toUpperCase()} exported!`;
+
+  } catch(e) {
+    console.error('Export error:', e);
+    status.textContent = `✗ ${e.message}`;
+  } finally {
+    // Always restore contenteditable
+    editables.forEach(el => el.setAttribute('contenteditable', 'true'));
+    setTimeout(() => status.textContent = '', 4000);
+  }
+}
+
+// ── INIT ─────────────────────────────────────────────────
+(function init() {
+  // 1. Load saved state first (before render so insights array is right)
+  const saved = loadState();
+  if (saved && saved.insights) insights = saved.insights;
+
+  // 2. Render editors + card
+  renderEditors();
+  renderCard();
+  attachEditable();
+
+  // 3. Apply rest of saved state (HTML, theme, layout, inputs, image)
+  if (saved) applyState(saved);
+
+  // 4. Subtitle visibility
+  const sub = document.getElementById('subtitleEl');
+  sub.style.display = sub.textContent.trim() ? 'block' : 'none';
+
+  // 5. Two-way sync: card→panel for inline-editable elements
+  document.getElementById('eyebrowEl').addEventListener('input', () => {
+    document.getElementById('tb-eyebrow').value = document.getElementById('eyebrowEl').textContent;
+    scheduleSave();
+  });
+  document.getElementById('titleEl').addEventListener('input', () => {
+    document.getElementById('tb-title').value = document.getElementById('titleEl').textContent;
+    scheduleSave();
+  });
+  document.getElementById('subtitleEl').addEventListener('input', () => {
+    document.getElementById('tb-subtitle').value = document.getElementById('subtitleEl').textContent;
+    const s = document.getElementById('subtitleEl');
+    s.style.display = s.textContent.trim() ? 'block' : 'none';
+    scheduleSave();
+  });
+  document.getElementById('footerTxtEl').addEventListener('input', () => {
+    document.getElementById('tb-footer').value = document.getElementById('footerTxtEl').textContent;
+    scheduleSave();
+  });
+
+  // 6. Also scheduleSave on format toolbar color/size apply
+  // (already fires via attachEditable input listener on card spans)
+})();
+
+// ══════════════════════════════════════════════════════════
+// ROMAN → HINDI TRANSLITERATION
+// Uses Google Input Tools API (free, no key needed)
+// ══════════════════════════════════════════════════════════
+
+let hindiSelected = '';   // currently chosen suggestion
+
+async function doTranslit() {
+  const input = document.getElementById('hindiRoman').value.trim();
+  if (!input) return;
+
+  const status  = document.getElementById('hindiStatus');
+  const btn     = document.getElementById('hindiTranslitBtn');
+  const sugWrap = document.getElementById('hindiSuggestions');
+  const sugList = document.getElementById('hindiSugList');
+  const resWrap = document.getElementById('hindiResultWrap');
+  const resEl   = document.getElementById('hindiResult');
+
+  status.textContent = '⏳ Converting…';
+  btn.style.opacity  = '0.5';
+  btn.disabled       = true;
+  sugWrap.style.display = 'none';
+  resWrap.style.display = 'none';
+
+  try {
+    // Google Input Tools transliteration endpoint
+    // Returns suggestions array per word
+    const encoded = encodeURIComponent(input);
+    const url = `https://inputtools.google.com/request?text=${encoded}&itc=hi-t-i0-und&num=5&cp=0&cs=1&ie=utf-8&oe=utf-8&app=demopage`;
+
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const data = await resp.json();
+
+    // Response format: ["SUCCESS", [["word", ["option1","option2",...]], ...]]
+    if (!data || data[0] !== 'SUCCESS') throw new Error('API returned non-success');
+
+    const results = data[1]; // array of [input_word, [suggestions...]]
+
+    // Build full string from first suggestion of each word
+    const primary = results.map(r => (r[1] && r[1][0]) || r[0]).join(' ');
+    hindiSelected = primary;
+    resEl.textContent = primary;
+    resWrap.style.display = 'block';
+
+    // Build suggestion chips — cross-product the first 3 options per word
+    // For single-word inputs show all suggestions
+    sugList.innerHTML = '';
+    if (results.length === 1 && results[0][1].length > 1) {
+      results[0][1].forEach((sug, i) => {
+        const chip = document.createElement('div');
+        chip.textContent = sug;
+        chip.style.cssText = `
+          font-family:'Rajdhani',sans-serif;font-size:1.1rem;color:#fff;
+          background:${i===0?'rgba(255,165,0,0.18)':'rgba(255,255,255,0.06)'};
+          border:1px solid ${i===0?'rgba(255,165,0,0.5)':'rgba(255,255,255,0.12)'};
+          border-radius:5px;padding:4px 10px;cursor:pointer;transition:all 0.15s;
+        `;
+        chip.onmouseenter = () => chip.style.background = 'rgba(255,165,0,0.28)';
+        chip.onmouseleave = () => chip.style.background = i===0?'rgba(255,165,0,0.18)':'rgba(255,255,255,0.06)';
+        chip.onclick = () => {
+          hindiSelected = sug;
+          resEl.textContent = sug;
+          // highlight selected
+          sugList.querySelectorAll('div').forEach(c => {
+            c.style.background = 'rgba(255,255,255,0.06)';
+            c.style.borderColor = 'rgba(255,255,255,0.12)';
+          });
+          chip.style.background  = 'rgba(255,165,0,0.28)';
+          chip.style.borderColor = 'rgba(255,165,0,0.6)';
+        };
+        sugList.appendChild(chip);
+      });
+      sugWrap.style.display = 'block';
+    } else if (results.length > 1) {
+      // Multi-word: show the primary + up to 4 alternative combinations
+      const alts = [];
+      for (let combo = 0; combo < Math.min(5, results.reduce((p,r)=>p*(r[1]?.length||1),1)); combo++) {
+        const alt = results.map(r => {
+          const opts = r[1] || [r[0]];
+          return opts[combo % opts.length] || opts[0];
+        }).join(' ');
+        if (!alts.includes(alt)) alts.push(alt);
+      }
+      alts.forEach((alt, i) => {
+        const chip = document.createElement('div');
+        chip.textContent = alt;
+        chip.style.cssText = `
+          font-family:'Rajdhani',sans-serif;font-size:0.95rem;color:#fff;
+          background:${i===0?'rgba(255,165,0,0.18)':'rgba(255,255,255,0.06)'};
+          border:1px solid ${i===0?'rgba(255,165,0,0.5)':'rgba(255,255,255,0.12)'};
+          border-radius:5px;padding:4px 10px;cursor:pointer;transition:all 0.15s;
+          word-break:break-word;max-width:100%;
+        `;
+        chip.onclick = () => {
+          hindiSelected = alt;
+          resEl.textContent = alt;
+          sugList.querySelectorAll('div').forEach(c => {
+            c.style.background = 'rgba(255,255,255,0.06)';
+            c.style.borderColor = 'rgba(255,255,255,0.12)';
+          });
+          chip.style.background  = 'rgba(255,165,0,0.28)';
+          chip.style.borderColor = 'rgba(255,165,0,0.6)';
+        };
+        sugList.appendChild(chip);
+      });
+      if (alts.length > 1) sugWrap.style.display = 'block';
+    }
+
+    status.textContent = '✓ Done — click a suggestion or use buttons below';
+    setTimeout(() => status.textContent = '', 3000);
+
+  } catch(e) {
+    console.error('Translit error:', e);
+    // Fallback: offline basic transliteration map
+    const fallback = basicTranslit(input);
+    hindiSelected = fallback;
+    resEl.textContent = fallback;
+    resWrap.style.display = 'block';
+    status.textContent = '⚠ Offline mode — basic conversion used';
+  } finally {
+    btn.style.opacity = '1';
+    btn.disabled = false;
+  }
+}
+
+// ── Minimal offline fallback map ──────────────────────────
+function basicTranslit(text) {
+  const map = {
+    'aa':'आ','ai':'ऐ','au':'औ','ee':'ई','ii':'ई','oo':'ऊ','uu':'ऊ',
+    'sh':'श','ch':'च','kh':'ख','gh':'ग','ph':'फ','bh':'भ','dh':'ध','th':'थ','jh':'झ','nh':'ण','rh':'ऱ',
+    'a':'अ','b':'ब','c':'क','d':'द','e':'ए','f':'फ','g':'ग','h':'ह','i':'इ',
+    'j':'ज','k':'क','l':'ल','m':'म','n':'न','o':'ओ','p':'प','q':'क','r':'र',
+    's':'स','t':'त','u':'उ','v':'व','w':'व','x':'क्स','y':'य','z':'ज़',
+    'A':'अ','B':'ब','C':'क','D':'द','E':'ए','F':'फ','G':'ग','H':'ह','I':'इ',
+    'J':'ज','K':'क','L':'ल','M':'म','N':'न','O':'ओ','P':'प','R':'र',
+    'S':'स','T':'त','U':'उ','V':'व','W':'व','Y':'य','Z':'ज़',
+  };
+  let result = '', i = 0;
+  while (i < text.length) {
+    const two = text.slice(i, i+2);
+    if (map[two]) { result += map[two]; i += 2; }
+    else if (map[text[i]]) { result += map[text[i]]; i++; }
+    else { result += text[i]; i++; }
+  }
+  return result;
+}
+
+// ── Clear ─────────────────────────────────────────────────
+function hindiClearAll() {
+  document.getElementById('hindiRoman').value = '';
+  document.getElementById('hindiStatus').textContent = '';
+  document.getElementById('hindiSuggestions').style.display = 'none';
+  document.getElementById('hindiResultWrap').style.display = 'none';
+  document.getElementById('hindiSugList').innerHTML = '';
+  document.getElementById('hindiResult').textContent = '';
+  hindiSelected = '';
+}
+
+// ── Copy to clipboard ─────────────────────────────────────
+function hindiCopy() {
+  const txt = hindiSelected || document.getElementById('hindiResult').textContent;
+  if (!txt) return;
+  navigator.clipboard.writeText(txt).then(() => {
+    const m = document.getElementById('hindiCopyMsg');
+    m.textContent = '✓ COPIED TO CLIPBOARD';
+    setTimeout(() => m.textContent = '', 2000);
+  });
+}
+
+// ── Send to card fields ───────────────────────────────────
+function hindiToTitle() {
+  const txt = hindiSelected || document.getElementById('hindiResult').textContent;
+  if (!txt) return;
+  document.getElementById('tb-title').value = txt;
+  document.getElementById('titleEl').textContent = txt;
+  scheduleSave();
+  flashMsg('hindiCopyMsg', '✓ SENT TO TITLE');
+}
+
+function hindiToSubtitle() {
+  const txt = hindiSelected || document.getElementById('hindiResult').textContent;
+  if (!txt) return;
+  document.getElementById('tb-subtitle').value = txt;
+  const sub = document.getElementById('subtitleEl');
+  sub.textContent = txt;
+  sub.style.display = 'block';
+  scheduleSave();
+  flashMsg('hindiCopyMsg', '✓ SENT TO SUBTITLE');
+}
+
+function hindiToInsight() {
+  const txt = hindiSelected || document.getElementById('hindiResult').textContent;
+  if (!txt) return;
+  insights.push({ text: txt, color: 'cyan' });
+  renderEditors(); renderCard(); scheduleSave();
+  flashMsg('hindiCopyMsg', '✓ ADDED AS INSIGHT');
+}
+
+function flashMsg(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  setTimeout(() => el.textContent = '', 2200);
+}
+
+// ── RESET ALL ────────────────────────────────────────────
+function resetAll() {
+  if (!confirm('Clear all saved data and reset to defaults?')) return;
+  localStorage.removeItem(LS_KEY);
+  location.reload();
+}
+
+// Enter key triggers transliteration
+document.getElementById('hindiRoman').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); doTranslit(); }
+});
+</script>
+</body>
+</html>

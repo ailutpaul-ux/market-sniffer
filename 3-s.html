@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>The Market Sniffer – OI Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Rajdhani:wght@500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --cyan:   #00e5ff;
+  --red:    #ff3d57;
+  --gold:   #ffd54f;
+  --green:  #9cffc9;
+  --white:  #ffffff;
+  --bg:     #050b18;
+  --card:   #0b1328;
+  --card2:  #0e1a36;
+  --border: rgba(0,229,255,0.18);
+  --gc:     0 0 16px rgba(0,229,255,0.55);
+  --gr:     0 0 16px rgba(255,61,87,0.65);
+  --gg:     0 0 16px rgba(156,255,201,0.5);
+  --gd:     0 0 14px rgba(255,213,79,0.6);
+}
+
+body {
+  background: var(--bg);
+  font-family: 'Rajdhani', sans-serif;
+  color: #fff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 16px 80px;
+}
+
+/* ── WRAPPER ── */
+.wrapper {
+  width: 100%;
+  max-width: 580px;
+  background: linear-gradient(180deg, #0b132a 0%, #060b18 100%);
+  border-radius: 20px;
+  box-shadow: 0 0 60px rgba(0,200,255,0.15), 0 0 120px rgba(0,0,0,0.6);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  padding: 32px 28px 36px;
+}
+
+/* ── EDITABLE ── */
+[contenteditable="true"] {
+  cursor: text;
+  border-radius: 3px;
+  transition: background 0.18s, outline 0.15s;
+  outline: 1px dashed transparent;
+}
+[contenteditable="true"]:hover {
+  background: rgba(255,255,255,0.05);
+  outline: 1px dashed rgba(0,229,255,0.35);
+}
+[contenteditable="true"]:focus {
+  background: rgba(255,255,255,0.08);
+  outline: 1px solid rgba(0,229,255,0.65);
+}
+
+/* ── BRAND ── */
+.brand {
+  text-align: center;
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1.1rem, 4vw, 1.45rem);
+  letter-spacing: 0.18em;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.brand .the    { color: var(--cyan); font-size: 0.75em; text-shadow: var(--gc); }
+.brand .market { color: #ff6b6b; text-shadow: var(--gr); }
+.brand .sniff  { color: #fff; }
+.brand .icon   { font-size: 1.1em; }
+
+.brand-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+  opacity: 0.3;
+  margin: 10px 0 18px;
+}
+
+/* ── MAIN TITLE ── */
+.main-title {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1.6rem, 7vw, 2.6rem);
+  font-weight: 900;
+  text-align: center;
+  letter-spacing: 0.06em;
+  color: #fff;
+  text-shadow: 0 0 30px rgba(0,229,255,0.2);
+  line-height: 1.1;
+  display: block;
+}
+
+/* ── SUBTITLE ROW ── */
+.subtitle-block {
+  text-align: center;
+  margin: 12px 0 6px;
+}
+.sub1 {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  color: var(--cyan);
+  letter-spacing: 0.14em;
+  text-shadow: var(--gc);
+  display: inline-block;
+}
+.sub-deco {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 2px 0;
+}
+.sub-line { flex: 1; max-width: 60px; height: 1px; background: var(--cyan); opacity: 0.3; }
+.sub2 {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--gold);
+  letter-spacing: 0.12em;
+  text-shadow: var(--gd);
+  display: inline-block;
+}
+
+/* ── WARNING BANNER ── */
+.warning {
+  background: linear-gradient(90deg, #2a1500, #3a1f00, #2a1500);
+  border: 1px solid rgba(255,213,79,0.35);
+  border-radius: 8px;
+  padding: 11px 16px;
+  text-align: center;
+  color: var(--gold);
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(0.65rem, 2.5vw, 0.78rem);
+  letter-spacing: 0.08em;
+  text-shadow: var(--gd);
+  margin: 16px 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* ── CHART SECTION ── */
+.chart-section {
+  background: rgba(0,0,0,0.25);
+  border: 1px solid rgba(0,229,255,0.1);
+  border-radius: 12px;
+  padding: 18px 14px 14px;
+  margin-bottom: 22px;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding: 0 4px;
+}
+.legend-item {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  padding: 4px 10px;
+  border-radius: 4px;
+  display: inline-block;
+}
+.leg-put  { color: var(--cyan); background: rgba(0,229,255,0.1); border: 1px solid rgba(0,229,255,0.3); }
+.leg-call { color: var(--red);  background: rgba(255,61,87,0.1);  border: 1px solid rgba(255,61,87,0.3); }
+
+/* Chart rows */
+.chart-row {
+  display: flex;
+  align-items: center;
+  margin: 7px 0;
+  gap: 0;
+  position: relative;
+}
+.chart-row.maxpain {
+  background: rgba(255,213,79,0.04);
+  border-radius: 6px;
+}
+
+.oi-left {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  padding-right: 4px;
+}
+.oi-right {
+  width: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  padding-left: 4px;
+}
+
+.oi-val-left {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1rem;
+  color: var(--cyan);
+  text-shadow: var(--gc);
+  min-width: 42px;
+  text-align: right;
+  flex-shrink: 0;
+}
+.oi-val-right {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 1rem;
+  color: var(--red);
+  text-shadow: var(--gr);
+  min-width: 42px;
+  flex-shrink: 0;
+}
+
+.put-bar {
+  height: 14px;
+  border-radius: 3px 0 0 3px;
+  background: linear-gradient(270deg, #00e5ff, #0099bb);
+  box-shadow: 0 0 8px rgba(0,229,255,0.45);
+  transition: width 0.4s;
+  flex-shrink: 0;
+}
+.call-bar {
+  height: 14px;
+  border-radius: 0 3px 3px 0;
+  background: linear-gradient(90deg, #ff3d57, #cc1122);
+  box-shadow: 0 0 8px rgba(255,61,87,0.45);
+  transition: width 0.4s;
+  flex-shrink: 0;
+}
+
+/* Center axis */
+.chart-center {
+  position: relative;
+  width: 0;
+  flex-shrink: 0;
+}
+.center-line {
+  position: absolute;
+  top: -500px;
+  bottom: -500px;
+  width: 1px;
+  background: linear-gradient(180deg, transparent, rgba(255,213,79,0.5), transparent);
+  left: 0;
+  pointer-events: none;
+}
+
+/* Strike label */
+.strike-label {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(0.62rem, 2vw, 0.75rem);
+  font-weight: 700;
+  color: var(--gold);
+  text-shadow: var(--gd);
+  white-space: nowrap;
+  pointer-events: none;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.maxpain-tag {
+  position: absolute;
+  top: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--gold);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  opacity: 0.9;
+}
+
+/* Strike in center - for maxpain row */
+.maxpain-strike {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(0.9rem, 3vw, 1.15rem);
+  font-weight: 900;
+  color: var(--gold);
+  text-shadow: 0 0 20px rgba(255,213,79,0.7);
+  white-space: nowrap;
+  text-align: center;
+  min-width: 90px;
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+.normal-strike {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.55);
+  white-space: nowrap;
+  text-align: center;
+  min-width: 70px;
+  padding: 0 4px;
+  flex-shrink: 0;
+}
+
+/* ── CARDS GRID ── */
+.cards-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.info-card {
+  background: var(--card2);
+  border-radius: 10px;
+  padding: 16px 14px;
+  border: 1px solid rgba(0,229,255,0.12);
+  position: relative;
+  overflow: hidden;
+}
+.info-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 2px;
+}
+.info-card.red-accent   { border-color: rgba(255,61,87,0.3); }
+.info-card.red-accent::before { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+.info-card.cyan-accent  { border-color: rgba(0,229,255,0.3); }
+.info-card.cyan-accent::before { background: linear-gradient(90deg, transparent, var(--cyan), transparent); }
+.info-card.yellow-accent { border-color: rgba(255,213,79,0.35); }
+.info-card.yellow-accent::before { background: linear-gradient(90deg, transparent, var(--gold), transparent); }
+.info-card.green-accent { border-color: rgba(156,255,201,0.3); }
+.info-card.green-accent::before { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+
+.card-label {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.14em;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 6px;
+  display: block;
+}
+.card-value {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(0.95rem, 3vw, 1.2rem);
+  font-weight: 900;
+  display: block;
+  margin-bottom: 4px;
+}
+.red-accent   .card-value { color: var(--red);   text-shadow: var(--gr); }
+.cyan-accent  .card-value { color: var(--cyan);  text-shadow: var(--gc); }
+.yellow-accent .card-value { color: var(--gold); text-shadow: var(--gd); }
+.green-accent .card-value { color: var(--green); text-shadow: var(--gg); }
+
+.card-sub {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.06em;
+  display: block;
+}
+
+/* ── MARKET STRUCTURE ── */
+.market-structure {
+  background: rgba(0,0,0,0.2);
+  border: 1px solid rgba(0,229,255,0.12);
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 18px;
+}
+.ms-header {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  color: var(--cyan);
+  text-align: center;
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+.ms-header::before, .ms-header::after {
+  content: ''; flex: 1; height: 1px; background: var(--cyan); opacity: 0.25;
+}
+.ms-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.ms-label {
+  font-family: 'Rajdhani', sans-serif;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.5);
+  width: 110px;
+  text-align: right;
+  display: inline-block;
+}
+.ms-arrow { color: rgba(255,255,255,0.3); font-size: 1rem; }
+.ms-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 1rem;
+  font-weight: 700;
+  display: inline-block;
+  padding: 1px 6px;
+}
+.ms-val.red   { color: var(--red);   text-shadow: var(--gr); }
+.ms-val.cyan  { color: var(--cyan);  text-shadow: var(--gc); }
+
+/* ── RANGE ── */
+.range-block {
+  text-align: center;
+  margin-top: 4px;
+}
+.range-val {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(1.3rem, 5vw, 1.9rem);
+  font-weight: 900;
+  color: var(--green);
+  text-shadow: var(--gg);
+  display: inline-block;
+  padding: 2px 8px;
+}
+
+/* ── FOOTER ── */
+.footer {
+  text-align: center;
+  margin-top: 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 20px;
+  color: #FFFFFF
+  letter-spacing: 0.12em;
+  display: inline-block;
+  width: 100%;
+}
+
+/* ── EDIT HINT ── */
+.edit-hint {
+  margin-top: 18px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  color: rgba(0,229,255,0.3);
+  letter-spacing: 0.16em;
+  text-align: center;
+  animation: pulse 2.4s ease-in-out infinite;
+  user-select: none;
+}
+@keyframes pulse { 0%,100%{opacity:.35} 50%{opacity:.9} }
+
+/* ── EXPORT ── */
+.export-controls {
+  display: flex; gap: 10px; justify-content: center; margin-top: 18px;
+}
+.export-btn {
+  background: #00e5ff; color: #000; border: none;
+  padding: 8px 20px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; font-weight: 700; cursor: pointer;
+  border-radius: 5px; letter-spacing: 0.5px; transition: all 0.2s;
+}
+.export-btn:hover { background: #00b8d4; transform: translateY(-1px); }
+.export-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.export-status {
+  text-align: center; font-family: 'Share Tech Mono', monospace;
+  font-size: 9px; color: #00e5ff; margin-top: 6px; min-height: 14px;
+}
+
+/* ── COLOR PICKER ── */
+.cp-popup {
+  position: fixed;
+  background: #060e1f;
+  border: 1px solid rgba(0,229,255,0.45);
+  border-radius: 10px;
+  padding: 14px;
+  display: none;
+  z-index: 9999;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.75), 0 0 20px rgba(0,229,255,0.1);
+  width: 220px;
+}
+.cp-popup.active { display: block; }
+.cp-title { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; color: var(--cyan); letter-spacing: 0.15em; margin-bottom: 10px; text-align: center; }
+.cp-swatches { display: grid; grid-template-columns: repeat(5,1fr); gap: 6px; margin-bottom: 10px; }
+.cp-swatch { width: 32px; height: 32px; border-radius: 5px; cursor: pointer; border: 2px solid transparent; transition: all 0.15s; }
+.cp-swatch:hover { transform: scale(1.12); border-color: rgba(255,255,255,0.5); }
+.cp-swatch.sel { border-color: #fff; box-shadow: 0 0 8px rgba(0,229,255,0.7); }
+.cp-row { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+.cp-lbl { font-family: 'Share Tech Mono', monospace; font-size: 0.58rem; color: rgba(255,255,255,0.35); white-space: nowrap; }
+.cp-hex { flex:1; background: rgba(255,255,255,0.07); border: 1px solid rgba(0,229,255,0.25); border-radius: 4px; color: #fff; font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; padding: 4px 6px; width: 80px; }
+.cp-hex:focus { outline:none; border-color: var(--cyan); }
+.cp-native { width:28px; height:28px; border:none; background:none; cursor:pointer; padding:0; border-radius:4px; overflow:hidden; flex-shrink:0; }
+.cp-apply { margin-top:10px; width:100%; background:rgba(0,229,255,0.15); border:1px solid rgba(0,229,255,0.4); color:var(--cyan); font-family:'Share Tech Mono',monospace; font-size:0.62rem; letter-spacing:0.1em; padding:5px; border-radius:4px; cursor:pointer; transition:background 0.2s; }
+.cp-apply:hover { background:rgba(0,229,255,0.25); }
+</style>
+</head>
+<body>
+
+<!-- MAIN WRAPPER (exported) -->
+<div class="wrapper" id="exportCard">
+
+  <!-- BRAND -->
+  <div class="brand">
+    <span class="the" contenteditable="true" spellcheck="false">THE</span>
+    <span class="market" contenteditable="true" spellcheck="false">MARKET</span>
+    <span class="sniff" contenteditable="true" spellcheck="false">SNIFFER</span>
+    <span class="icon">🔍</span>
+  </div>
+  <div class="brand-divider"></div>
+
+  <!-- MAIN TITLE -->
+  <span class="main-title" contenteditable="true" spellcheck="false" id="titleEl">OPTIONS OPEN INTEREST</span>
+
+  <!-- SUBTITLE -->
+  <div class="subtitle-block">
+    <div class="sub-deco">
+      <div class="sub-line"></div>
+      <span class="sub1" contenteditable="true" spellcheck="false" id="sub1El">NIFTY EXPIRY ANALYSIS</span>
+      <div class="sub-line"></div>
+    </div>
+    <div class="sub-deco" style="margin-top:2px;">
+      <div class="sub-line" style="background:var(--gold)"></div>
+      <span class="sub2" contenteditable="true" spellcheck="false" id="sub2El">10 MAR 2026</span>
+      <div class="sub-line" style="background:var(--gold)"></div>
+    </div>
+  </div>
+
+  <!-- WARNING -->
+  <div class="warning">
+    <span>⚠</span>
+    <span contenteditable="true" spellcheck="false" id="warnEl">MARKET TRAPPED BETWEEN ₹24,000 – ₹25,000</span>
+  </div>
+
+  <!-- CHART -->
+  <div class="chart-section">
+    <!-- Legend -->
+    <div class="legend">
+      <span class="legend-item leg-put" contenteditable="true" spellcheck="false" id="legendPutEl">PUT OI (SUPPORT)</span>
+      <span class="legend-item leg-call" contenteditable="true" spellcheck="false" id="legendCallEl">CALL OI (RESISTANCE)</span>
+    </div>
+    <!-- Rows rendered by JS -->
+    <div id="chartRows" style="position:relative;"></div>
+  </div>
+
+  <!-- CARDS -->
+  <div class="cards-grid" id="cardsGrid"></div>
+
+  <!-- MARKET STRUCTURE -->
+  <div class="market-structure">
+    <div class="ms-header">
+      <span contenteditable="true" spellcheck="false">MARKET STRUCTURE</span>
+    </div>
+    <div class="ms-row">
+      <span class="ms-label" contenteditable="true" spellcheck="false">RESISTANCE</span>
+      <span class="ms-arrow">→</span>
+      <span class="ms-val red" contenteditable="true" spellcheck="false" id="resistanceEl">₹25,000</span>
+    </div>
+    <div class="ms-row">
+      <span class="ms-label" contenteditable="true" spellcheck="false">SUPPORT</span>
+      <span class="ms-arrow">→</span>
+      <span class="ms-val cyan" contenteditable="true" spellcheck="false" id="supportEl">₹24,000</span>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer" contenteditable="true" spellcheck="false">For educational purposes only</div>
+
+</div><!-- end wrapper -->
+
+<div class="edit-hint">✦ CLICK TO EDIT TEXT · RIGHT-CLICK TO CHANGE COLOR ✦</div>
+
+<div class="export-controls">
+  <button class="export-btn" id="btnPNG" onclick="exportImg('png')">💾 Export PNG</button>
+  <button class="export-btn" id="btnJPG" onclick="exportImg('jpg')">💾 Export JPG</button>
+</div>
+<div class="export-status" id="expStatus"></div>
+
+<!-- COLOR PICKER -->
+<div class="cp-popup" id="cpPopup">
+  <div class="cp-title">✦ PICK COLOR ✦</div>
+  <div class="cp-swatches">
+    <div class="cp-swatch" data-color="#00e5ff" style="background:#00e5ff"></div>
+    <div class="cp-swatch" data-color="#ff3d57" style="background:#ff3d57"></div>
+    <div class="cp-swatch" data-color="#ffd54f" style="background:#ffd54f"></div>
+    <div class="cp-swatch" data-color="#9cffc9" style="background:#9cffc9"></div>
+    <div class="cp-swatch" data-color="#ffffff" style="background:#ffffff"></div>
+    <div class="cp-swatch" data-color="#ff6b6b" style="background:#ff6b6b"></div>
+    <div class="cp-swatch" data-color="#00ff00" style="background:#00ff00"></div>
+    <div class="cp-swatch" data-color="#ff9500" style="background:#ff9500"></div>
+    <div class="cp-swatch" data-color="#bf5fff" style="background:#bf5fff"></div>
+    <div class="cp-swatch" data-color="#aaaaaa" style="background:#aaaaaa"></div>
+    <div class="cp-swatch" data-color="#ff007f" style="background:#ff007f"></div>
+    <div class="cp-swatch" data-color="#40e0d0" style="background:#40e0d0"></div>
+    <div class="cp-swatch" data-color="#ffec40" style="background:#ffec40"></div>
+    <div class="cp-swatch" data-color="#00cfff" style="background:#00cfff"></div>
+    <div class="cp-swatch" data-color="#ff4500" style="background:#ff4500"></div>
+  </div>
+  <div class="cp-row">
+    <span class="cp-lbl">HEX</span>
+    <input class="cp-hex" id="cpHex" type="text" placeholder="#00e5ff" maxlength="7"/>
+    <input class="cp-native" id="cpNative" type="color" value="#00e5ff"/>
+  </div>
+  <button class="cp-apply" id="cpApply">APPLY COLOR</button>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script>
+// ── DATA ──────────────────────────────────────────────────────────────────
+const DATA = {
+  "title": "OPTIONS OPEN INTEREST",
+  "subtitle1": "NIFTY EXPIRY ANALYSIS",
+  "subtitle2": "10 MAR 2026",
+  "warning": "MARKET TRAPPED BETWEEN ₹24,000 – ₹25,000",
+  "legendPut": "PUT OI (SUPPORT)",
+  "legendCall": "CALL OI (RESISTANCE)",
+  "putColor": "#00e5ff",
+  "callColor": "#ff3d57",
+  "rows": [
+    { "label": "24,000", "put": 6555250, "call": 589745,  "maxPain": false },
+    { "label": "24,500", "put": 4741620, "call": 3779100, "maxPain": false },
+    { "label": "24,600", "put": 2970045, "call": 5562960, "maxPain": false },
+    { "label": "24,700", "put": 1487460, "call": 5535140, "maxPain": false },
+    { "label": "24,800", "put": 1325350, "call": 5340595, "maxPain": false },
+    { "label": "24,900", "put":  673010, "call": 4033640, "maxPain": false },
+    { "label": "25,000", "put": 1611675, "call":10485800, "maxPain": false }
+  ],
+  "cards": [
+    { "label": "MAX CALL OI STRIKE",  "value": "25,000 CE", "sub": "Strong Resistance Zone",  "accent": "red-accent"    },
+    { "label": "MAX PUT OI STRIKE",   "value": "24,000 PE", "sub": "Strong Support Zone",     "accent": "cyan-accent"   },
+    { "label": "MAX PAIN LEVEL",      "value": "24,600",    "sub": "Price gravity on expiry", "accent": "yellow-accent" },
+    { "label": "EXPECTED RANGE",      "value": "24,000 – 25,000", "sub": "Expiry trading band","accent": "green-accent" }
+  ],
+  "resistance": "₹25,000",
+  "support":    "₹24,000",
+  "range":      "₹24,000 – 25,000"
+};
+
+// ── FORMAT ────────────────────────────────────────────────────────────────
+function fmt(n) {
+  if (n >= 1e6) return (n/1e6).toFixed(2) + 'M';
+  if (n >= 1e3) return (n/1e3).toFixed(0) + 'K';
+  return n.toString();
+}
+
+// ── RENDER CHART ──────────────────────────────────────────────────────────
+function renderChart() {
+  const container = document.getElementById('chartRows');
+  container.innerHTML = '';
+
+  const maxVal = Math.max(...DATA.rows.map(r => Math.max(r.put, r.call)));
+  const BAR_MAX = 110; // px each side
+
+  // Vertical center line
+  const centerLineEl = document.createElement('div');
+  centerLineEl.style.cssText = `position:absolute;left:50%;top:0;bottom:0;width:1px;background:linear-gradient(180deg,transparent,rgba(255,213,79,0.4),transparent);pointer-events:none;z-index:1;`;
+  container.appendChild(centerLineEl);
+
+  DATA.rows.forEach((row, i) => {
+    const putW  = Math.round((row.put  / maxVal) * BAR_MAX);
+    const callW = Math.round((row.call / maxVal) * BAR_MAX);
+
+    const rowEl = document.createElement('div');
+    rowEl.className = 'chart-row' + (row.maxPain ? ' maxpain' : '');
+    rowEl.style.position = 'relative';
+    rowEl.style.marginTop = row.maxPain ? '18px' : '0';
+
+    if (row.maxPain) {
+      const tag = document.createElement('div');
+      tag.className = 'maxpain-tag';
+      rowEl.appendChild(tag);
+    }
+
+    rowEl.innerHTML += `
+      <div class="oi-left">
+        <span class="oi-val-left">${fmt(row.put)}</span>
+        <div class="put-bar" style="width:${putW}px"></div>
+      </div>
+      <${row.maxPain ? 'div class="maxpain-strike"' : 'div class="normal-strike"'}>₹${row.label}</${'div'}>
+      <div class="oi-right">
+        <div class="call-bar" style="width:${callW}px"></div>
+        <span class="oi-val-right">${fmt(row.call)}</span>
+      </div>
+    `;
+    container.appendChild(rowEl);
+  });
+}
+
+// ── RENDER CARDS ──────────────────────────────────────────────────────────
+function renderCards() {
+  const grid = document.getElementById('cardsGrid');
+  grid.innerHTML = '';
+  DATA.cards.forEach(card => {
+    const el = document.createElement('div');
+    el.className = `info-card ${card.accent}`;
+    el.innerHTML = `
+      <span class="card-label" contenteditable="true" spellcheck="false">${card.label}</span>
+      <span class="card-value" contenteditable="true" spellcheck="false">${card.value}</span>
+      <span class="card-sub"  contenteditable="true" spellcheck="false">${card.sub}</span>
+    `;
+    grid.appendChild(el);
+  });
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderChart();
+renderCards();
+attachEditBehavior();
+
+function attachEditBehavior() {
+  document.querySelectorAll('[contenteditable="true"]').forEach(el => {
+    el.addEventListener('focus', () => {
+      const r = document.createRange();
+      r.selectNodeContents(el);
+      const s = window.getSelection();
+      s.removeAllRanges(); s.addRange(r);
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); el.blur(); }
+    });
+    el.addEventListener('contextmenu', e => {
+      e.preventDefault();
+      showCP(el, e.clientX + 8, e.clientY + 8);
+    });
+  });
+}
+
+// ── COLOR PICKER ──────────────────────────────────────────────────────────
+const cpPopup  = document.getElementById('cpPopup');
+const cpHex    = document.getElementById('cpHex');
+const cpNative = document.getElementById('cpNative');
+const cpApply  = document.getElementById('cpApply');
+let cpTarget   = null;
+let cpPending  = '#00e5ff';
+
+function showCP(el, x, y) {
+  cpTarget = el;
+  cpPopup.style.left = Math.min(x, window.innerWidth  - 240) + 'px';
+  cpPopup.style.top  = Math.min(y, window.innerHeight - 300) + 'px';
+  cpPopup.classList.add('active');
+  document.querySelectorAll('.cp-swatch').forEach(s => s.classList.remove('sel'));
+  const cur = rgbToHex(window.getComputedStyle(el).color);
+  cpHex.value = cur || '#ffffff';
+  cpNative.value = cpHex.value;
+  cpPending = cpHex.value;
+}
+
+document.querySelectorAll('.cp-swatch').forEach(sw => {
+  sw.addEventListener('click', () => {
+    const hex = sw.dataset.color;
+    cpHex.value = cpNative.value = hex; cpPending = hex;
+    document.querySelectorAll('.cp-swatch').forEach(s => s.classList.remove('sel'));
+    sw.classList.add('sel');
+  });
+});
+cpHex.addEventListener('input', () => {
+  const v = cpHex.value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) { cpNative.value = v; cpPending = v; }
+});
+cpNative.addEventListener('input', () => {
+  cpHex.value = cpNative.value; cpPending = cpNative.value;
+  document.querySelectorAll('.cp-swatch').forEach(s => s.classList.remove('sel'));
+});
+cpApply.addEventListener('click', () => {
+  if (cpTarget && cpPending) {
+    cpTarget.style.color = cpPending;
+    cpTarget.style.textShadow = `0 0 14px ${cpPending}99`;
+  }
+  cpPopup.classList.remove('active');
+});
+document.addEventListener('click', e => {
+  if (!cpPopup.contains(e.target) && !e.target.closest('[contenteditable]'))
+    cpPopup.classList.remove('active');
+});
+
+function rgbToHex(rgb) {
+  const m = rgb.match(/\d+/g);
+  if (!m || m.length < 3) return null;
+  return '#' + m.slice(0,3).map(x => parseInt(x).toString(16).padStart(2,'0')).join('');
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────
+async function exportImg(fmt) {
+  const status = document.getElementById('expStatus');
+  const bp = document.getElementById('btnPNG');
+  const bj = document.getElementById('btnJPG');
+  bp.disabled = bj.disabled = true;
+  status.textContent = `Generating ${fmt.toUpperCase()}...`;
+  cpPopup.classList.remove('active');
+  try {
+    const el = document.getElementById('exportCard');
+    const canvas = await html2canvas(el, {
+      backgroundColor: '#060b18', scale: 2, logging: false,
+      onclone: doc => {
+        const s = doc.createElement('style');
+        s.textContent = `.wrapper{box-shadow:none!important;}`;
+        doc.head.appendChild(s);
+      }
+    });
+    const blob = await new Promise(res => canvas.toBlob(res, fmt === 'png' ? 'image/png' : 'image/jpeg', 0.95));
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `oi-dashboard-${new Date().toISOString().slice(0,10)}.${fmt}`;
+    a.click(); URL.revokeObjectURL(url);
+    status.textContent = `✓ ${fmt.toUpperCase()} downloaded!`;
+  } catch(e) {
+    console.error(e); status.textContent = `✗ Export failed`;
+  } finally {
+    bp.disabled = bj.disabled = false;
+    setTimeout(() => status.textContent = '', 3000);
+  }
+}
+</script>
+</body>
+</html>
