@@ -271,7 +271,7 @@ html, body {
 
 .slide-item {
   display: grid;
-  grid-template-columns: 52px 1fr 58px 26px;
+  grid-template-columns: 18px 52px 1fr 58px 26px;
   gap: 8px;
   align-items: center;
   padding: 7px;
@@ -283,6 +283,15 @@ html, body {
 .slide-item.active {
   border-color: rgba(0,229,255,0.45);
   box-shadow: 0 0 0 1px rgba(0,229,255,0.2) inset;
+}
+
+.slide-item.selected {
+  border-color: rgba(255,213,79,0.38);
+  box-shadow: 0 0 0 1px rgba(255,213,79,0.14) inset;
+}
+
+.slide-item.active.selected {
+  box-shadow: 0 0 0 1px rgba(0,229,255,0.2) inset, 0 0 0 2px rgba(255,213,79,0.16);
 }
 
 .slide-thumb {
@@ -345,6 +354,13 @@ html, body {
   color: rgba(255,61,87,0.8);
   cursor: pointer;
   font-size: 0.95rem;
+}
+
+.slide-select {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--gold);
+  cursor: pointer;
 }
 
 .hint {
@@ -443,17 +459,6 @@ html, body {
 
 .brand-name .tm { color: #ff6b6b; }
 .brand-name .ts { color: #fff; }
-
-.brand-badge {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 0.52rem;
-  color: var(--gold);
-  letter-spacing: 0.1em;
-  background: rgba(255,213,79,0.1);
-  border: 1px solid rgba(255,213,79,0.25);
-  border-radius: 3px;
-  padding: 2px 6px;
-}
 
 .title-section {
   min-height: 90px;
@@ -676,7 +681,7 @@ html, body {
       <div class="ed-row">
         <div class="ed-group">
           <div class="ed-label">HEADLINE</div>
-          <input class="ed-input" id="titleInput" type="text" value="TOP IMAGE SLIDES + BOTTOM CAMERA"/>
+          <input class="ed-input" id="titleInput" type="text" value="TOP IMAGE SLIDES"/>
         </div>
       </div>
       <div class="ed-row">
@@ -857,6 +862,10 @@ html, body {
         <button class="ed-btn" id="generateSlideTtsAudioBtn" type="button" style="flex:1;">GENERATE TTS AUDIO</button>
         <button class="ed-btn" id="downloadSlideAudioBtn" type="button" style="flex:1;">DOWNLOAD AUDIO</button>
       </div>
+      <div class="ed-row">
+        <button class="ed-btn" id="selectAllSlidesBtn" type="button" style="flex:1;">SELECT ALL SLIDES</button>
+        <button class="ed-btn danger" id="clearSlideSelectionBtn" type="button" style="flex:1;">CLEAR SELECTION</button>
+      </div>
       <div class="hint" id="slideAudioMeta" style="margin-bottom:10px;">Select a slide to attach audio. If a slide has audio, that audio length controls the slide duration automatically.</div>
       <div class="slide-list" id="slideList"></div>
     </div>
@@ -929,6 +938,7 @@ html, body {
             <option value="clean" selected>CLEAN VOICE</option>
             <option value="presentation">ORG DELIVERY</option>
             <option value="authority">MALE AUTHORITY</option>
+            <option value="deep-radio">DEEP RADIO VOICE</option>
             <option value="executive">EXECUTIVE BRIGHT</option>
             <option value="podcast">PODCAST SOFT</option>
             <option value="broadcast">BROADCAST</option>
@@ -942,6 +952,28 @@ html, body {
             <option value="1.08" selected>1.08x</option>
             <option value="1.18">1.18x</option>
             <option value="1.3">1.30x</option>
+            <option value="1.5">1.50x</option>
+            <option value="1.8">1.80x</option>
+            <option value="2.2">2.20x</option>
+          </select>
+        </div>
+        <div class="ed-group narrow">
+          <div class="ed-label">BASS</div>
+          <select class="ed-select" id="voiceBassInput">
+            <option value="off" selected>OFF</option>
+            <option value="light">LIGHT</option>
+            <option value="medium">MEDIUM</option>
+            <option value="strong">STRONG</option>
+            <option value="very-strong">VERY STRONG</option>
+          </select>
+        </div>
+        <div class="ed-group narrow">
+          <div class="ed-label">TREBLE</div>
+          <select class="ed-select" id="voiceTrebleInput">
+            <option value="off" selected>OFF</option>
+            <option value="light">LIGHT</option>
+            <option value="medium">MEDIUM</option>
+            <option value="strong">STRONG</option>
           </select>
         </div>
       </div>
@@ -958,7 +990,9 @@ html, body {
         <div class="ed-group narrow">
           <div class="ed-label">NOISE</div>
           <select class="ed-select" id="noiseReductionInput">
-            <option value="on" selected>REDUCE</option>
+            <option value="light">LIGHT</option>
+            <option value="medium" selected>MEDIUM</option>
+            <option value="strong">STRONG</option>
             <option value="off">OFF</option>
           </select>
         </div>
@@ -1022,7 +1056,7 @@ html, body {
       </div>
 
       <div class="title-section">
-        <div class="main-title" id="titleEl">TOP IMAGE SLIDES + BOTTOM CAMERA</div>
+        <div class="main-title" id="titleEl">TOP IMAGE SLIDES</div>
         <div class="divider"></div>
       </div>
 
@@ -1058,7 +1092,8 @@ html, body {
 
 <script>
 const LS_KEY = 'tms_youtube_shorts_builder_v1';
-const DEFAULT_HEADLINE = 'TOP IMAGE SLIDES + BOTTOM CAMERA';
+const DEFAULT_HEADLINE = 'TOP IMAGE SLIDES';
+const MIC_PREVIEW_SAMPLE_MS = 5000;
 const RECORDING_FORMAT_PRESETS = [
   {
     value: 'auto',
@@ -1104,12 +1139,21 @@ const state = {
   stream: null,
   micStream: null,
   recorder: null,
+  recordingAutoPaused: false,
+  recordingWasPlayingBeforeAutoPause: false,
+  transcriptWasActiveBeforeAutoPause: false,
   renderCanvas: null,
   renderContext: null,
   renderFrameId: 0,
   isRecording: false,
   recordChunks: [],
   previewStream: null,
+  previewRecorder: null,
+  previewChunks: [],
+  previewTimeoutId: 0,
+  previewShouldPlayback: true,
+  previewAudioElement: null,
+  previewAudioUrl: '',
   isPreviewing: false,
   audioContext: null,
   audioDestination: null,
@@ -1128,6 +1172,7 @@ const state = {
   slidePreviewFrameId: 0,
   slideDisplayContext: null,
   slideSpeechUtterance: null,
+  selectedSlideIds: [],
   recognition: null,
   transcriptActive: false,
   transcriptFinal: '',
@@ -1216,6 +1261,8 @@ function saveState() {
     cameraBackgroundSrc: state.cameraBackgroundSrc,
     voicePreset: document.getElementById('voicePresetInput').value,
     voiceGain: document.getElementById('voiceGainInput').value,
+    voiceBass: document.getElementById('voiceBassInput').value,
+    voiceTreble: document.getElementById('voiceTrebleInput').value,
     voiceGate: document.getElementById('voiceGateInput').value,
     noiseReduction: document.getElementById('noiseReductionInput').value,
     echoCancel: document.getElementById('echoCancelInput').value,
@@ -1550,6 +1597,54 @@ function getCurrentSlide() {
   return state.slides[Math.max(0, safeIndex)] || null;
 }
 
+function createSlideId() {
+  return `slide-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+}
+
+function ensureSlideIdentity(slide) {
+  if (!slide.id) {
+    slide.id = createSlideId();
+  }
+  return slide;
+}
+
+function syncSelectedSlideIds() {
+  const validIds = new Set(state.slides.map(slide => slide.id));
+  state.selectedSlideIds = state.selectedSlideIds.filter(id => validIds.has(id));
+}
+
+function isSlideSelected(slide) {
+  return Boolean(slide && state.selectedSlideIds.includes(slide.id));
+}
+
+function getSelectedSlides() {
+  syncSelectedSlideIds();
+  return state.slides.filter(slide => state.selectedSlideIds.includes(slide.id));
+}
+
+function getAudioTargetSlides() {
+  const selectedSlides = getSelectedSlides();
+  if (selectedSlides.length) {
+    return selectedSlides;
+  }
+  const currentSlide = getCurrentSlide();
+  return currentSlide ? [currentSlide] : [];
+}
+
+function toggleSlideSelection(slideId, forceSelected) {
+  const selected = new Set(state.selectedSlideIds);
+  if (forceSelected === true) {
+    selected.add(slideId);
+  } else if (forceSelected === false) {
+    selected.delete(slideId);
+  } else if (selected.has(slideId)) {
+    selected.delete(slideId);
+  } else {
+    selected.add(slideId);
+  }
+  state.selectedSlideIds = Array.from(selected);
+}
+
 function getCurrentSlideDurationMs(slide, runtimeDurationSeconds) {
   const resolvedSeconds = Number.isFinite(runtimeDurationSeconds) && runtimeDurationSeconds > 0
     ? runtimeDurationSeconds
@@ -1840,20 +1935,21 @@ function startSlidePreviewLoop() {
 function updateSlideAudioMeta() {
   const meta = document.getElementById('slideAudioMeta');
   const slide = getCurrentSlide();
+  const selectedCount = getSelectedSlides().length;
   if (!slide) {
     meta.textContent = 'Select a slide to attach uploaded audio or local TTS text. Audio has priority; otherwise TTS controls slide duration automatically.';
     return;
   }
   if (slide.audioSrc) {
     const audioLabel = slide.audioGenerated ? 'Generated TTS audio' : (slide.audioName || 'Attached audio');
-    meta.textContent = `${audioLabel} • ${formatSeconds(Number(slide.audioDuration || 0))}. This slide ignores the dropdown duration and can be downloaded.`;
+    meta.textContent = `${audioLabel} • ${formatSeconds(Number(slide.audioDuration || 0))}. This slide ignores the dropdown duration and can be downloaded.${selectedCount > 1 ? ` ${selectedCount} slides are selected for bulk audio actions.` : ''}`;
     return;
   }
   if (slide.ttsText) {
-    meta.textContent = `TTS attached • estimated ${(getCurrentSlideDurationMs(slide) / 1000).toFixed(1)} sec. Voice recommendation follows selected provider and detected language.`;
+    meta.textContent = `TTS attached • estimated ${(getCurrentSlideDurationMs(slide) / 1000).toFixed(1)} sec. Voice recommendation follows selected provider and detected language.${selectedCount > 1 ? ` ${selectedCount} slides are selected for bulk audio actions.` : ''}`;
     return;
   }
-  meta.textContent = `No audio on this slide. It will use the selected dropdown duration of ${(Number(state.slideDuration || 2000) / 1000).toFixed(1)} sec.`;
+  meta.textContent = `No audio on this slide. It will use the selected dropdown duration of ${(Number(state.slideDuration || 2000) / 1000).toFixed(1)} sec.${selectedCount > 1 ? ` ${selectedCount} slides are selected for bulk audio actions.` : ''}`;
 }
 
 function getGeneratedTtsExtension(provider, format, blobType) {
@@ -2113,9 +2209,11 @@ function renderSlides() {
 
   list.innerHTML = '';
   state.slides.forEach((slide, index) => {
+    ensureSlideIdentity(slide);
     const item = document.createElement('div');
-    item.className = `slide-item${index === state.currentIndex ? ' active' : ''}`;
+    item.className = `slide-item${index === state.currentIndex ? ' active' : ''}${isSlideSelected(slide) ? ' selected' : ''}`;
     item.innerHTML = `
+      <input class="slide-select" type="checkbox" aria-label="Select slide for bulk audio actions" ${isSlideSelected(slide) ? 'checked' : ''}>
       <img class="slide-thumb" src="${slide.src}" alt="${slide.name}">
       <div class="slide-meta">
         <div class="slide-name">${slide.name}</div>
@@ -2132,10 +2230,18 @@ function renderSlides() {
 
     item.addEventListener('click', event => {
       if (event.target.closest('.slide-remove')) return;
+      if (event.target.closest('.slide-select')) return;
       state.currentIndex = index;
       updateSlidePreview();
       renderSlides();
       saveState();
+    });
+
+    item.querySelector('.slide-select').addEventListener('click', event => {
+      event.stopPropagation();
+      toggleSlideSelection(slide.id, event.target.checked);
+      renderSlides();
+      updateSlideAudioMeta();
     });
 
     item.querySelector('.slide-remove').addEventListener('click', event => {
@@ -2279,6 +2385,7 @@ function clearSlides() {
   stopSlideSpeech();
   state.slides = [];
   state.currentIndex = 0;
+  state.selectedSlideIds = [];
   updateSlidePreview();
   renderSlides();
   restartSlideLoop();
@@ -2403,9 +2510,10 @@ function getRecordingMimeType() {
 }
 
 function getAudioCaptureOptions() {
+  const noiseReductionLevel = getNoiseReductionLevel();
   return {
     echoCancellation: document.getElementById('echoCancelInput').value === 'on',
-    noiseSuppression: document.getElementById('noiseReductionInput').value === 'on',
+    noiseSuppression: noiseReductionLevel !== 'off',
     autoGainControl: document.getElementById('autoGainInput').value === 'on',
     channelCount: 1,
     sampleRate: 48000,
@@ -2432,6 +2540,59 @@ function closeAudioProcessing() {
   }
   state.audioDestination = null;
   state.processedMicStream = null;
+}
+
+function stopMicPreviewPlayback() {
+  if (state.previewAudioElement) {
+    state.previewAudioElement.pause();
+    state.previewAudioElement.removeAttribute('src');
+    state.previewAudioElement.load();
+  }
+  if (state.previewAudioUrl) {
+    URL.revokeObjectURL(state.previewAudioUrl);
+    state.previewAudioUrl = '';
+  }
+}
+
+function cleanupMicPreviewCapture() {
+  clearTimeout(state.previewTimeoutId);
+  state.previewTimeoutId = 0;
+  if (state.previewStream) {
+    state.previewStream.getTracks().forEach(track => track.stop());
+    state.previewStream = null;
+  }
+  closeAudioProcessing();
+  state.previewRecorder = null;
+  state.previewChunks = [];
+  state.previewShouldPlayback = true;
+  state.isPreviewing = false;
+  document.getElementById('voicePreviewBtn').textContent = 'PREVIEW MIC';
+}
+
+async function playMicPreviewBlob(blob, mimeType) {
+  if (!(blob && blob.size)) {
+    setStatus('Preview captured no audio');
+    return;
+  }
+
+  stopMicPreviewPlayback();
+  if (!state.previewAudioElement) {
+    state.previewAudioElement = document.createElement('audio');
+    state.previewAudioElement.preload = 'auto';
+    state.previewAudioElement.playsInline = true;
+  }
+
+  const normalizedBlob = blob.type ? blob : new Blob([blob], { type: mimeType || 'audio/webm' });
+  const url = URL.createObjectURL(normalizedBlob);
+  state.previewAudioUrl = url;
+  state.previewAudioElement.src = url;
+
+  try {
+    await state.previewAudioElement.play();
+    setStatus('Playing mic preview');
+  } catch (error) {
+    setStatus('Preview playback blocked');
+  }
 }
 
 function ensureCameraCompositeCanvas() {
@@ -2712,6 +2873,107 @@ function getNoiseGateSettings() {
   return { threshold: 0.014, floor: 0.12, attack: 0.006, release: 0.2 };
 }
 
+function getNoiseReductionLevel() {
+  const value = document.getElementById('noiseReductionInput').value;
+  if (value === 'light' || value === 'medium' || value === 'strong' || value === 'off') {
+    return value;
+  }
+  return value === 'on' ? 'medium' : 'off';
+}
+
+function getVoiceBassSettings() {
+  const value = document.getElementById('voiceBassInput').value;
+  if (value === 'very-strong') return { gain: 8, frequency: 190, q: 0.95 };
+  if (value === 'strong') return { gain: 6, frequency: 180, q: 0.9 };
+  if (value === 'medium') return { gain: 4, frequency: 170, q: 0.85 };
+  if (value === 'light') return { gain: 2, frequency: 160, q: 0.8 };
+  return null;
+}
+
+function getVoiceTrebleSettings() {
+  const value = document.getElementById('voiceTrebleInput').value;
+  if (value === 'strong') return { gain: 5, frequency: 4600, q: 0.9 };
+  if (value === 'medium') return { gain: 3.5, frequency: 4200, q: 0.85 };
+  if (value === 'light') return { gain: 2, frequency: 3800, q: 0.8 };
+  return null;
+}
+
+function installNoiseReductionChain(audioContext, inputNode) {
+  const level = getNoiseReductionLevel();
+  if (level === 'off') {
+    return inputNode;
+  }
+
+  const profile = level === 'strong'
+    ? {
+        humQ: 14,
+        harmonicQ: 10,
+        roomMudGain: -3.4,
+        hissGain: -7,
+        lowPassFrequency: 7200,
+      }
+    : level === 'light'
+      ? {
+          humQ: 8,
+          harmonicQ: 5,
+          roomMudGain: -1,
+          hissGain: -2.2,
+          lowPassFrequency: 11000,
+        }
+      : {
+          humQ: 10,
+          harmonicQ: 7,
+          roomMudGain: -1.8,
+          hissGain: -4.5,
+          lowPassFrequency: 9000,
+        };
+
+  const hum50 = audioContext.createBiquadFilter();
+  hum50.type = 'notch';
+  hum50.frequency.value = 50;
+  hum50.Q.value = profile.humQ;
+
+  const hum60 = audioContext.createBiquadFilter();
+  hum60.type = 'notch';
+  hum60.frequency.value = 60;
+  hum60.Q.value = profile.humQ;
+
+  const hum120 = audioContext.createBiquadFilter();
+  hum120.type = 'notch';
+  hum120.frequency.value = 120;
+  hum120.Q.value = profile.harmonicQ;
+
+  const hum240 = audioContext.createBiquadFilter();
+  hum240.type = 'notch';
+  hum240.frequency.value = 240;
+  hum240.Q.value = Math.max(4, profile.harmonicQ - 2);
+
+  const roomMud = audioContext.createBiquadFilter();
+  roomMud.type = 'peaking';
+  roomMud.frequency.value = 280;
+  roomMud.gain.value = profile.roomMudGain;
+  roomMud.Q.value = 0.9;
+
+  const hissTame = audioContext.createBiquadFilter();
+  hissTame.type = 'highshelf';
+  hissTame.frequency.value = 6200;
+  hissTame.gain.value = profile.hissGain;
+
+  const lowPass = audioContext.createBiquadFilter();
+  lowPass.type = 'lowpass';
+  lowPass.frequency.value = profile.lowPassFrequency;
+  lowPass.Q.value = 0.7;
+
+  inputNode.connect(hum50);
+  hum50.connect(hum60);
+  hum60.connect(hum120);
+  hum120.connect(hum240);
+  hum240.connect(roomMud);
+  roomMud.connect(hissTame);
+  hissTame.connect(lowPass);
+  return lowPass;
+}
+
 function installNoiseGate(audioContext, inputNode, outputNode) {
   const gateSettings = getNoiseGateSettings();
   if (!gateSettings) {
@@ -2750,10 +3012,19 @@ function installNoiseGate(audioContext, inputNode, outputNode) {
 
 async function buildProcessedMicStream(inputStream, options = {}) {
   const preset = document.getElementById('voicePresetInput').value;
+  const bassSettings = getVoiceBassSettings();
+  const trebleSettings = getVoiceTrebleSettings();
+  const shouldProcessRaw = Boolean(
+    bassSettings
+    || trebleSettings
+    || getNoiseReductionLevel() !== 'off'
+    || document.getElementById('voiceGateInput').value !== 'off'
+    || Number(document.getElementById('voiceGainInput').value || 1) !== 1
+  );
   const extraStreams = Array.isArray(options.extraStreams)
     ? options.extraStreams.filter(stream => stream && typeof stream.getAudioTracks === 'function' && stream.getAudioTracks().length)
     : [];
-  if (preset === 'off' && !options.monitorOutput && !extraStreams.length) {
+  if (preset === 'off' && !shouldProcessRaw && !options.monitorOutput && !extraStreams.length) {
     return inputStream;
   }
 
@@ -2771,6 +3042,8 @@ async function buildProcessedMicStream(inputStream, options = {}) {
         return { highPass: 95, bodyFreq: 240, bodyGain: -1.6, bodyQ: 0.9, toneType: 'peaking', toneFreq: 2600, toneGain: 2.2, toneQ: 1.0, presenceFreq: 4000, presenceGain: 1.9, presenceQ: 1.0, airFreq: 6000, airGain: 1.4, compThreshold: -24.5, compRatio: 3.4, compAttack: 0.004, compRelease: 0.16, levelThreshold: -18, levelRatio: 2.1, gainMultiplier: 1.12 };
       case 'authority':
         return { highPass: 72, bodyFreq: 190, bodyGain: 1.6, bodyQ: 0.85, toneType: 'peaking', toneFreq: 2100, toneGain: 1.4, toneQ: 0.95, presenceFreq: 3200, presenceGain: 1.2, presenceQ: 0.95, airFreq: 5200, airGain: 0.5, compThreshold: -25.5, compRatio: 3.9, compAttack: 0.005, compRelease: 0.2, levelThreshold: -19, levelRatio: 2.2, gainMultiplier: 1.1 };
+      case 'deep-radio':
+        return { highPass: 62, bodyFreq: 175, bodyGain: 2.8, bodyQ: 0.8, toneType: 'lowshelf', toneFreq: 170, toneGain: 2.2, toneQ: 0.9, presenceFreq: 2900, presenceGain: 0.8, presenceQ: 0.95, airFreq: 5000, airGain: -0.4, compThreshold: -27, compRatio: 4.2, compAttack: 0.004, compRelease: 0.2, levelThreshold: -20, levelRatio: 2.4, gainMultiplier: 1.16 };
       case 'executive':
         return { highPass: 100, bodyFreq: 250, bodyGain: -1.1, bodyQ: 0.9, toneType: 'peaking', toneFreq: 3000, toneGain: 2.6, toneQ: 1.05, presenceFreq: 4300, presenceGain: 2.2, presenceQ: 1.0, airFreq: 6800, airGain: 1.8, compThreshold: -24, compRatio: 3.5, compAttack: 0.003, compRelease: 0.15, levelThreshold: -18, levelRatio: 2.0, gainMultiplier: 1.1 };
       case 'podcast':
@@ -2799,6 +3072,18 @@ async function buildProcessedMicStream(inputStream, options = {}) {
   tone.frequency.value = profile.toneFreq;
   tone.gain.value = profile.toneGain;
   tone.Q.value = profile.toneQ;
+
+  const bassBoost = audioContext.createBiquadFilter();
+  bassBoost.type = 'lowshelf';
+  bassBoost.frequency.value = bassSettings ? bassSettings.frequency : 170;
+  bassBoost.gain.value = bassSettings ? bassSettings.gain : 0;
+  bassBoost.Q.value = bassSettings ? bassSettings.q : 0.8;
+
+  const trebleBoost = audioContext.createBiquadFilter();
+  trebleBoost.type = 'highshelf';
+  trebleBoost.frequency.value = trebleSettings ? trebleSettings.frequency : 4200;
+  trebleBoost.gain.value = trebleSettings ? trebleSettings.gain : 0;
+  trebleBoost.Q.value = trebleSettings ? trebleSettings.q : 0.85;
 
   const presence = audioContext.createBiquadFilter();
   presence.type = 'peaking';
@@ -2829,18 +3114,26 @@ async function buildProcessedMicStream(inputStream, options = {}) {
   gainNode.gain.value = Number(document.getElementById('voiceGainInput').value || 1) * profile.gainMultiplier;
 
   const destination = audioContext.createMediaStreamDestination();
-  if (preset === 'off') {
-    source.connect(gainNode);
-  } else {
+  let processedNode = source;
+  if (preset !== 'off') {
     source.connect(highPass);
     highPass.connect(bodyControl);
-    bodyControl.connect(tone);
+    bodyControl.connect(bassBoost);
+    bassBoost.connect(tone);
     tone.connect(presence);
-    presence.connect(air);
+    presence.connect(trebleBoost);
+    trebleBoost.connect(air);
     air.connect(compressor);
     compressor.connect(leveler);
-    installNoiseGate(audioContext, leveler, gainNode);
+    processedNode = leveler;
+  } else if (bassSettings || trebleSettings) {
+    source.connect(bassBoost);
+    bassBoost.connect(trebleBoost);
+    processedNode = trebleBoost;
   }
+
+  processedNode = installNoiseReductionChain(audioContext, processedNode);
+  installNoiseGate(audioContext, processedNode, gainNode);
 
   extraStreams.forEach(stream => {
     const extraSource = audioContext.createMediaStreamSource(stream);
@@ -2960,7 +3253,7 @@ function startTranscriptCapture() {
 
 async function startMicPreview() {
   if (state.isRecording || state.isPreviewing) return;
-  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
     setStatus('Mic preview unsupported');
     return;
   }
@@ -2976,35 +3269,67 @@ async function startMicPreview() {
   }
 
   try {
-    await buildProcessedMicStream(state.previewStream, { monitorOutput: true });
+    stopMicPreviewPlayback();
+    const processedStream = await buildProcessedMicStream(state.previewStream);
+    const mimeType = getRecordingMimeType();
+    const recorder = new MediaRecorder(processedStream, mimeType ? { mimeType } : undefined);
+    state.previewRecorder = recorder;
+    state.previewChunks = [];
+    state.previewShouldPlayback = true;
+
+    recorder.ondataavailable = event => {
+      if (event.data && event.data.size > 0) {
+        state.previewChunks.push(event.data);
+      }
+    };
+
+    recorder.onstop = async () => {
+      const chunks = state.previewChunks.slice();
+      const resolvedMimeType = recorder.mimeType || mimeType || 'audio/webm';
+      const shouldPlayback = state.previewShouldPlayback;
+      cleanupMicPreviewCapture();
+      if (!shouldPlayback) {
+        setStatus('Mic preview stopped');
+        return;
+      }
+      await playMicPreviewBlob(new Blob(chunks, { type: resolvedMimeType }), resolvedMimeType);
+    };
+
+    recorder.start(250);
     applyMicMuteState();
     state.isPreviewing = true;
-    document.getElementById('voicePreviewBtn').textContent = 'STOP PREVIEW';
-    setStatus('Mic preview on - use headphones');
+    document.getElementById('voicePreviewBtn').textContent = 'STOP + PLAY';
+    state.previewTimeoutId = setTimeout(() => {
+      stopMicPreview();
+    }, MIC_PREVIEW_SAMPLE_MS);
+    setStatus('Speak one sentence for mic preview...', true);
   } catch (error) {
-    if (state.previewStream) {
-      state.previewStream.getTracks().forEach(track => track.stop());
-      state.previewStream = null;
-    }
-    closeAudioProcessing();
+    cleanupMicPreviewCapture();
     setStatus('Preview failed');
   }
 }
 
-function stopMicPreview() {
-  if (state.previewStream) {
-    state.previewStream.getTracks().forEach(track => track.stop());
-    state.previewStream = null;
+function stopMicPreview(options = {}) {
+  const { playback = true } = options;
+  clearTimeout(state.previewTimeoutId);
+  state.previewTimeoutId = 0;
+  state.previewShouldPlayback = playback;
+  if (state.previewRecorder && state.previewRecorder.state !== 'inactive') {
+    state.previewRecorder.stop();
+    if (playback) {
+      setStatus('Rendering mic preview...', true);
+    }
+    return;
   }
-  closeAudioProcessing();
-  state.isPreviewing = false;
-  document.getElementById('voicePreviewBtn').textContent = 'PREVIEW MIC';
+  cleanupMicPreviewCapture();
+  if (!playback) {
+    setStatus('Mic preview stopped');
+  }
 }
 
 function toggleMicPreview() {
   if (state.isPreviewing) {
     stopMicPreview();
-    setStatus('Mic preview off');
     return;
   }
   startMicPreview();
@@ -3174,10 +3499,6 @@ function drawRecordingFrame(timestamp) {
   ctx.fillText('MARKET', 122, 104);
   ctx.fillStyle = '#ffffff';
   ctx.fillText('SNIFFER', 354, 104);
-  drawRoundedRect(ctx, 856, 34, 140, 44, 10, 'rgba(255,213,79,0.10)', 'rgba(255,213,79,0.28)');
-  ctx.fillStyle = '#ffd54f';
-  ctx.font = '600 22px "Share Tech Mono"';
-  // ctx.fillText('SHORTS', 892, 62);
 
   ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
@@ -3276,6 +3597,7 @@ function drawRecordingFrame(timestamp) {
 }
 
 function startRenderLoop() {
+  cancelAnimationFrame(state.renderFrameId);
   const render = timestamp => {
     drawRecordingFrame(timestamp || performance.now());
     if (state.isRecording) {
@@ -3288,6 +3610,55 @@ function startRenderLoop() {
 function stopRenderLoop() {
   cancelAnimationFrame(state.renderFrameId);
   state.renderFrameId = 0;
+}
+
+function pauseRecordingForHiddenTab() {
+  if (!(state.isRecording && state.recorder && state.recorder.state === 'recording')) return;
+  if (typeof state.recorder.pause !== 'function') return;
+
+  state.recordingAutoPaused = true;
+  state.recordingWasPlayingBeforeAutoPause = state.playing;
+  state.transcriptWasActiveBeforeAutoPause = state.transcriptActive;
+
+  try {
+    state.recorder.pause();
+  } catch (error) {
+    state.recordingAutoPaused = false;
+    return;
+  }
+
+  stopRenderLoop();
+  stopTranscriptCapture();
+  state.playing = false;
+  restartSlideLoop();
+  document.getElementById('recordBtn').textContent = 'REC PAUSED';
+  setStatus('Recording paused while tab is hidden. Return to resume.', true);
+}
+
+function resumeRecordingAfterHiddenTab() {
+  if (!(state.isRecording && state.recorder && state.recordingAutoPaused && state.recorder.state === 'paused')) return;
+  if (typeof state.recorder.resume !== 'function') return;
+
+  try {
+    state.recorder.resume();
+  } catch (error) {
+    return;
+  }
+
+  state.recordingAutoPaused = false;
+  drawRecordingFrame(performance.now());
+  startRenderLoop();
+  if (state.recordingWasPlayingBeforeAutoPause) {
+    state.playing = true;
+    restartSlideLoop();
+  }
+  if (state.transcriptWasActiveBeforeAutoPause) {
+    startTranscriptCapture();
+  }
+  state.recordingWasPlayingBeforeAutoPause = false;
+  state.transcriptWasActiveBeforeAutoPause = false;
+  document.getElementById('recordBtn').textContent = 'STOP REC';
+  setStatus('Recording resumed', true);
 }
 
 async function startRecording() {
@@ -3304,7 +3675,7 @@ async function startRecording() {
   }
 
   if (state.isPreviewing) {
-    stopMicPreview();
+    stopMicPreview({ playback: false });
   }
 
   if (state.layoutMode !== 'slides') {
@@ -3379,6 +3750,9 @@ async function startRecording() {
     stopTranscriptCapture();
     closeAudioProcessing();
     state.isRecording = false;
+    state.recordingAutoPaused = false;
+    state.recordingWasPlayingBeforeAutoPause = false;
+    state.transcriptWasActiveBeforeAutoPause = false;
     state.playing = false;
     restartSlideLoop();
     saveState();
@@ -3487,9 +3861,9 @@ document.getElementById('slideUpload').addEventListener('change', async event =>
 });
 
 document.getElementById('slideAudioUpload').addEventListener('change', async event => {
-  const slide = getCurrentSlide();
   const file = (event.target.files || [])[0];
-  if (!slide || !file) {
+  const targetSlides = getAudioTargetSlides();
+  if (!targetSlides.length || !file) {
     event.target.value = '';
     return;
   }
@@ -3504,15 +3878,17 @@ document.getElementById('slideAudioUpload').addEventListener('change', async eve
     readAudioDuration(file),
   ]);
 
-  slide.audioSrc = audioSrc;
-  slide.audioName = file.name;
-  slide.audioDuration = audioDuration || 0;
-  slide.audioGenerated = false;
+  targetSlides.forEach(slide => {
+    slide.audioSrc = audioSrc;
+    slide.audioName = file.name;
+    slide.audioDuration = audioDuration || 0;
+    slide.audioGenerated = false;
+  });
   updateSlidePreview();
   renderSlides();
   restartSlideLoop();
   saveState();
-  setStatus('Slide audio attached');
+  setStatus(targetSlides.length > 1 ? `Audio attached to ${targetSlides.length} slides` : 'Slide audio attached');
   event.target.value = '';
 });
 
@@ -3670,7 +4046,7 @@ document.getElementById('slideTtsRateInput').addEventListener('change', () => {
 document.getElementById('slideTtsPitchInput').addEventListener('change', saveState);
 
 document.getElementById('attachSlideAudioBtn').addEventListener('click', () => {
-  if (!getCurrentSlide()) {
+  if (!getAudioTargetSlides().length) {
     setStatus('Select a slide first');
     return;
   }
@@ -3678,15 +4054,18 @@ document.getElementById('attachSlideAudioBtn').addEventListener('click', () => {
 });
 
 document.getElementById('clearSlideAudioBtn').addEventListener('click', () => {
-  const slide = getCurrentSlide();
-  if (!slide || !slide.audioSrc) {
+  const targetSlides = getAudioTargetSlides();
+  const slidesWithAudio = targetSlides.filter(slide => slide.audioSrc);
+  if (!slidesWithAudio.length) {
     setStatus('No slide audio to clear');
     return;
   }
-  slide.audioSrc = '';
-  slide.audioName = '';
-  slide.audioDuration = 0;
-  slide.audioGenerated = false;
+  slidesWithAudio.forEach(slide => {
+    slide.audioSrc = '';
+    slide.audioName = '';
+    slide.audioDuration = 0;
+    slide.audioGenerated = false;
+  });
   if (state.slideAudioElement) {
     state.slideAudioElement.removeAttribute('src');
     state.slideAudioElement.load();
@@ -3695,7 +4074,29 @@ document.getElementById('clearSlideAudioBtn').addEventListener('click', () => {
   renderSlides();
   restartSlideLoop();
   saveState();
-  setStatus('Slide audio cleared');
+  setStatus(slidesWithAudio.length > 1 ? `Audio cleared from ${slidesWithAudio.length} slides` : 'Slide audio cleared');
+});
+
+document.getElementById('selectAllSlidesBtn').addEventListener('click', () => {
+  if (!state.slides.length) {
+    setStatus('No slides to select');
+    return;
+  }
+  state.selectedSlideIds = state.slides.map(slide => ensureSlideIdentity(slide).id);
+  renderSlides();
+  updateSlideAudioMeta();
+  setStatus(`${state.selectedSlideIds.length} slides selected`);
+});
+
+document.getElementById('clearSlideSelectionBtn').addEventListener('click', () => {
+  if (!state.selectedSlideIds.length) {
+    setStatus('No slide selection to clear');
+    return;
+  }
+  state.selectedSlideIds = [];
+  renderSlides();
+  updateSlideAudioMeta();
+  setStatus('Slide selection cleared');
 });
 
 document.getElementById('playSlidesBtn').addEventListener('click', toggleSlides);
@@ -3711,6 +4112,8 @@ document.getElementById('recordBtn').addEventListener('click', toggleRecording);
 document.getElementById('recordingFormatInput').addEventListener('change', saveState);
 document.getElementById('voicePresetInput').addEventListener('change', saveState);
 document.getElementById('voiceGainInput').addEventListener('change', saveState);
+document.getElementById('voiceBassInput').addEventListener('change', saveState);
+document.getElementById('voiceTrebleInput').addEventListener('change', saveState);
 document.getElementById('voiceGateInput').addEventListener('change', saveState);
 document.getElementById('noiseReductionInput').addEventListener('change', saveState);
 document.getElementById('echoCancelInput').addEventListener('change', saveState);
@@ -3718,6 +4121,13 @@ document.getElementById('autoGainInput').addEventListener('change', saveState);
 document.getElementById('voicePreviewBtn').addEventListener('click', toggleMicPreview);
 document.getElementById('copyCleanTranscriptBtn').addEventListener('click', copyCleanTranscript);
 document.getElementById('downloadCleanTranscriptBtn').addEventListener('click', downloadCleanTranscript);
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    pauseRecordingForHiddenTab();
+    return;
+  }
+  resumeRecordingAfterHiddenTab();
+});
 window.addEventListener('resize', () => {
   renderLiveSlidePreview(performance.now());
   if (state.stream) {
@@ -3790,12 +4200,18 @@ document.getElementById('layoutModeAuto').addEventListener('change', event => {
     document.getElementById('cameraFeatherInput').value = saved.cameraFeather || '4';
     document.getElementById('voicePresetInput').value = saved.voicePreset || 'clean';
     document.getElementById('voiceGainInput').value = saved.voiceGain || '1.08';
+    document.getElementById('voiceBassInput').value = saved.voiceBass || 'off';
+    document.getElementById('voiceTrebleInput').value = saved.voiceTreble || 'off';
     document.getElementById('voiceGateInput').value = saved.voiceGate || 'light';
-    document.getElementById('noiseReductionInput').value = saved.noiseReduction || 'on';
+    document.getElementById('noiseReductionInput').value = saved.noiseReduction === 'on'
+      ? 'medium'
+      : saved.noiseReduction === 'off'
+        ? 'off'
+        : (saved.noiseReduction || 'medium');
     document.getElementById('echoCancelInput').value = saved.echoCancel || 'on';
     document.getElementById('autoGainInput').value = saved.autoGain || 'on';
 
-    state.slides = Array.isArray(saved.slides) ? saved.slides : [];
+    state.slides = Array.isArray(saved.slides) ? saved.slides.map(slide => ensureSlideIdentity(slide)) : [];
     state.currentIndex = Number(saved.currentIndex || 0);
     state.playing = saved.playing !== false;
     state.slideDuration = Number(saved.slideDuration || 2000);
@@ -3847,7 +4263,7 @@ window.addEventListener('beforeunload', () => {
   clearAutoLayoutTimer();
   cancelAnimationFrame(state.slidePreviewFrameId);
   stopCameraRenderLoop();
-  stopMicPreview();
+  stopMicPreview({ playback: false });
   stopTranscriptCapture();
   stopRecording();
   closeAudioProcessing();
